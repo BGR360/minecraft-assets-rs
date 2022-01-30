@@ -111,7 +111,8 @@ pub struct Model {
     /// See the example on the [wiki page].
     ///
     /// [wiki page]: <https://minecraft.fandom.com/wiki/Model#Block_states>
-    pub uvlock: Option<bool>,
+    #[serde(rename = "uvlock")]
+    pub uv_lock: Option<bool>,
 
     /// Sets the probability of the model for being used in the game.
     ///

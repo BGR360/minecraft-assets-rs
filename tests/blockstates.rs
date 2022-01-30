@@ -168,7 +168,7 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "north" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uvlock: Some(true),
+                    uv_lock: Some(true),
                     ..Default::default()
                 }),
             },
@@ -176,7 +176,7 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "east" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uvlock: Some(true),
+                    uv_lock: Some(true),
                     y: Some(90),
                     ..Default::default()
                 }),
@@ -185,7 +185,7 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "south" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uvlock: Some(true),
+                    uv_lock: Some(true),
                     y: Some(180),
                     ..Default::default()
                 }),
@@ -194,7 +194,7 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "west" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uvlock: Some(true),
+                    uv_lock: Some(true),
                     y: Some(270),
                     ..Default::default()
                 }),
