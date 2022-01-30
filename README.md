@@ -1,4 +1,4 @@
-# minecraft-assets-rs
+# minecraft-assets
 
 Parsing Minecraft asset files in Rust.
 
