@@ -1,6 +1,7 @@
 # minecraft-assets
 
-[![Docs.rs](https://docs.rs/minecraft-assets/badge.svg)](https://docs.rs/minecraft-assets)
+[![Crates.io](https://img.shields.io/crates/v/minecraft-assets.svg)](https://crates.io/crates/minecraft-assets)
+[![Docs.rs](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/minecraft-assets)
 
 Parsing Minecraft asset files in Rust.
 
