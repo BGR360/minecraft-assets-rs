@@ -16,11 +16,13 @@ macro_rules! condition {
             $state:expr => $value:expr
         ),+
     ) => {
-        Condition(hashmap! {
+        Condition {
+            and: hashmap! {
             $(
                 $state.into() => $value.into()
             ),+
-        })
+            }
+        }
     }
 }
 
@@ -97,12 +99,12 @@ fn do_single_variant_multiple_models_test(bytes: &[u8], version: Version) {
                 },
                 Model {
                     model: model_path("stone", version),
-                    y: Some(180),
+                    y: 180,
                     ..Default::default()
                 },
                 Model {
                     model: model_path("stone_mirrored", version),
-                    y: Some(180),
+                    y: 180,
                     ..Default::default()
                 }
             ])
@@ -168,7 +170,7 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "north" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uv_lock: Some(true),
+                    uv_lock: true,
                     ..Default::default()
                 }),
             },
@@ -176,8 +178,8 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "east" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uv_lock: Some(true),
-                    y: Some(90),
+                    uv_lock: true,
+                    y: 90,
                     ..Default::default()
                 }),
             },
@@ -185,8 +187,8 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "south" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uv_lock: Some(true),
-                    y: Some(180),
+                    uv_lock: true,
+                    y: 180,
                     ..Default::default()
                 }),
             },
@@ -194,8 +196,8 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
                 when: Some(WhenClause::Single(condition! { "west" => "true" })),
                 apply: Variant::Single(Model {
                     model: model_path("cobblestone_wall_side", version),
-                    uv_lock: Some(true),
-                    y: Some(270),
+                    uv_lock: true,
+                    y: 270,
                     ..Default::default()
                 }),
             },

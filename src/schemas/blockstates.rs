@@ -90,7 +90,7 @@ impl Variant {
 }
 
 /// Contains the properties of a model.
-#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Model {
     /// Specifies the path to the model file of the block, in form of a
     /// [resource location].
@@ -99,10 +99,12 @@ pub struct Model {
     pub model: String,
 
     /// Rotation of the model on the x-axis in increments of 90 degrees.
-    pub x: Option<i32>,
+    #[serde(default = "Model::default_rotation")]
+    pub x: i32,
 
     /// Rotation of the model on the y-axis in increments of 90 degrees.
-    pub y: Option<i32>,
+    #[serde(default = "Model::default_rotation")]
+    pub y: i32,
 
     /// Can be `true` or `false` (default). Locks the rotation of the texture of
     /// a block, if set to `true`. This way the texture does not rotate with the
@@ -111,8 +113,8 @@ pub struct Model {
     /// See the example on the [wiki page].
     ///
     /// [wiki page]: <https://minecraft.fandom.com/wiki/Model#Block_states>
-    #[serde(rename = "uvlock")]
-    pub uv_lock: Option<bool>,
+    #[serde(rename = "uvlock", default = "Model::default_uv_lock")]
+    pub uv_lock: bool,
 
     /// Sets the probability of the model for being used in the game.
     ///
@@ -123,7 +125,34 @@ pub struct Model {
     /// weight would be 4 (1+1+2). The probability of each model being used
     /// would then be determined by dividing each weight by 4: 1/4, 1/4 and 2/4,
     /// or 25%, 25% and 50%, respectively.)
-    pub weight: Option<u32>,
+    #[serde(default = "Model::default_weight")]
+    pub weight: u32,
+}
+
+impl Model {
+    pub(crate) const fn default_rotation() -> i32 {
+        0
+    }
+
+    pub(crate) const fn default_uv_lock() -> bool {
+        false
+    }
+
+    pub(crate) const fn default_weight() -> u32 {
+        1
+    }
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Self {
+            model: Default::default(),
+            x: Self::default_rotation(),
+            y: Self::default_rotation(),
+            uv_lock: Self::default_uv_lock(),
+            weight: Self::default_weight(),
+        }
+    }
 }
 
 /// Types used to compose [`BlockStates::Multipart`].
@@ -178,7 +207,11 @@ pub mod multipart {
     /// "when": {"north": "side|up", "east": "side|up" }
     /// ```
     #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
-    pub struct Condition(pub HashMap<String, StateValue>);
+    pub struct Condition {
+        /// Map from state name to state value that forms the list of conditions.
+        #[serde(flatten)]
+        pub and: HashMap<String, StateValue>,
+    }
 
     /// The right-hand side of a [`Condition`] requirement.
     ///
