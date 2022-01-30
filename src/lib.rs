@@ -6,3 +6,4 @@
 #![warn(missing_docs)]
 
 pub mod schemas;
+pub mod versions;
