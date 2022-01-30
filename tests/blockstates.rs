@@ -100,9 +100,25 @@ fn single_variant_1_12() {
 }
 
 #[test]
+fn single_variant_1_13() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.13/assets/minecraft/blockstates/oak_planks.json"),
+        Version::Post_1_13,
+    );
+}
+
+#[test]
 fn single_variant_1_14() {
     do_single_variant_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/oak_planks.json"),
+        Version::Post_1_13,
+    );
+}
+
+#[test]
+fn single_variant_1_15() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.15/assets/minecraft/blockstates/oak_planks.json"),
         Version::Post_1_13,
     );
 }
@@ -171,9 +187,25 @@ fn single_variant_multiple_models_1_12() {
 }
 
 #[test]
+fn single_variant_multiple_models_1_13() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.13/assets/minecraft/blockstates/stone.json"),
+        Version::Post_1_13,
+    );
+}
+
+#[test]
 fn single_variant_multiple_models_1_14() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/stone.json"),
+        Version::Post_1_13,
+    );
+}
+
+#[test]
+fn single_variant_multiple_models_1_15() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.15/assets/minecraft/blockstates/stone.json"),
         Version::Post_1_13,
     );
 }
@@ -280,9 +312,25 @@ fn multipart_1_12() {
 }
 
 #[test]
+fn multipart_1_13() {
+    do_multipart_test(
+        include_bytes!("./assets-1.13/assets/minecraft/blockstates/cobblestone_wall.json"),
+        Version::Post_1_13,
+    );
+}
+
+#[test]
 fn multipart_1_14() {
     do_multipart_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/cobblestone_wall.json"),
+        Version::Post_1_13,
+    );
+}
+
+#[test]
+fn multipart_1_15() {
+    do_multipart_test(
+        include_bytes!("./assets-1.15/assets/minecraft/blockstates/cobblestone_wall.json"),
         Version::Post_1_13,
     );
 }
@@ -376,6 +424,16 @@ fn can_parse_all_blockstates_1_12() {
 }
 
 #[test]
+fn can_parse_all_blockstates_1_13() {
+    parse_all_blockstates_in_version("1.13");
+}
+
+#[test]
 fn can_parse_all_blockstates_1_14() {
     parse_all_blockstates_in_version("1.14");
+}
+
+#[test]
+fn can_parse_all_blockstates_1_15() {
+    parse_all_blockstates_in_version("1.15");
 }

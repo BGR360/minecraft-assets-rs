@@ -57,9 +57,23 @@ fn cube_all_1_12() {
 }
 
 #[test]
+fn cube_all_1_13() {
+    do_cube_all_test(include_bytes!(
+        "./assets-1.13/assets/minecraft/models/block/cube_all.json"
+    ));
+}
+
+#[test]
 fn cube_all_1_14() {
     do_cube_all_test(include_bytes!(
         "./assets-1.14/assets/minecraft/models/block/cube_all.json"
+    ));
+}
+
+#[test]
+fn cube_all_1_15() {
+    do_cube_all_test(include_bytes!(
+        "./assets-1.15/assets/minecraft/models/block/cube_all.json"
     ));
 }
 
@@ -95,6 +109,16 @@ fn can_parse_all_models_1_12() {
 }
 
 #[test]
+fn can_parse_all_models_1_13() {
+    parse_all_models_in_version("1.13");
+}
+
+#[test]
 fn can_parse_all_models_1_14() {
     parse_all_models_in_version("1.14");
+}
+
+#[test]
+fn can_parse_all_models_1_15() {
+    parse_all_models_in_version("1.15");
 }
