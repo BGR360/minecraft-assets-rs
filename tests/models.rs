@@ -36,9 +36,9 @@ fn cube_all_1_8() {
 }
 
 #[test]
-fn cube_all_1_10() {
+fn cube_all_1_9() {
     do_cube_all_test(include_bytes!(
-        "./assets-1.10/assets/minecraft/models/block/cube_all.json"
+        "./assets-1.9/assets/minecraft/models/block/cube_all.json"
     ));
 }
 
@@ -50,16 +50,16 @@ fn cube_all_1_11() {
 }
 
 #[test]
-fn cube_all_1_12_2() {
+fn cube_all_1_12() {
     do_cube_all_test(include_bytes!(
-        "./assets-1.12.2/assets/minecraft/models/block/cube_all.json"
+        "./assets-1.12/assets/minecraft/models/block/cube_all.json"
     ));
 }
 
 #[test]
-fn cube_all_1_14_4() {
+fn cube_all_1_14() {
     do_cube_all_test(include_bytes!(
-        "./assets-1.14.4/assets/minecraft/models/block/cube_all.json"
+        "./assets-1.14/assets/minecraft/models/block/cube_all.json"
     ));
 }
 
@@ -80,8 +80,8 @@ fn can_parse_all_models_1_8() {
 }
 
 #[test]
-fn can_parse_all_models_1_10() {
-    parse_all_models_in_version("1.10");
+fn can_parse_all_models_1_9() {
+    parse_all_models_in_version("1.9");
 }
 
 #[test]
@@ -90,11 +90,11 @@ fn can_parse_all_models_1_11() {
 }
 
 #[test]
-fn can_parse_all_models_1_12_2() {
-    parse_all_models_in_version("1.12.2");
+fn can_parse_all_models_1_12() {
+    parse_all_models_in_version("1.12");
 }
 
 #[test]
-fn can_parse_all_models_1_14_4() {
-    parse_all_models_in_version("1.14.4");
+fn can_parse_all_models_1_14() {
+    parse_all_models_in_version("1.14");
 }

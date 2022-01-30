@@ -76,9 +76,9 @@ fn single_variant_1_8() {
 }
 
 #[test]
-fn single_variant_1_10() {
+fn single_variant_1_9() {
     do_single_variant_test(
-        include_bytes!("./assets-1.10/assets/minecraft/blockstates/oak_planks.json"),
+        include_bytes!("./assets-1.9/assets/minecraft/blockstates/oak_planks.json"),
         Version::Pre_1_13,
     );
 }
@@ -92,17 +92,17 @@ fn single_variant_1_11() {
 }
 
 #[test]
-fn single_variant_1_12_2() {
+fn single_variant_1_12() {
     do_single_variant_test(
-        include_bytes!("./assets-1.12.2/assets/minecraft/blockstates/oak_planks.json"),
+        include_bytes!("./assets-1.12/assets/minecraft/blockstates/oak_planks.json"),
         Version::Pre_1_13,
     );
 }
 
 #[test]
-fn single_variant_1_14_4() {
+fn single_variant_1_14() {
     do_single_variant_test(
-        include_bytes!("./assets-1.14.4/assets/minecraft/blockstates/oak_planks.json"),
+        include_bytes!("./assets-1.14/assets/minecraft/blockstates/oak_planks.json"),
         Version::Post_1_13,
     );
 }
@@ -147,9 +147,9 @@ fn single_variant_multiple_models_1_8() {
 }
 
 #[test]
-fn single_variant_multiple_models_1_10() {
+fn single_variant_multiple_models_1_9() {
     do_single_variant_multiple_models_test(
-        include_bytes!("./assets-1.10/assets/minecraft/blockstates/stone.json"),
+        include_bytes!("./assets-1.9/assets/minecraft/blockstates/stone.json"),
         Version::Pre_1_13,
     );
 }
@@ -163,17 +163,17 @@ fn single_variant_multiple_models_1_11() {
 }
 
 #[test]
-fn single_variant_multiple_models_1_12_2() {
+fn single_variant_multiple_models_1_12() {
     do_single_variant_multiple_models_test(
-        include_bytes!("./assets-1.12.2/assets/minecraft/blockstates/stone.json"),
+        include_bytes!("./assets-1.12/assets/minecraft/blockstates/stone.json"),
         Version::Pre_1_13,
     );
 }
 
 #[test]
-fn single_variant_multiple_models_1_14_4() {
+fn single_variant_multiple_models_1_14() {
     do_single_variant_multiple_models_test(
-        include_bytes!("./assets-1.14.4/assets/minecraft/blockstates/stone.json"),
+        include_bytes!("./assets-1.14/assets/minecraft/blockstates/stone.json"),
         Version::Post_1_13,
     );
 }
@@ -181,7 +181,7 @@ fn single_variant_multiple_models_1_14_4() {
 #[test]
 fn multiple_variants() {
     let actual: BlockStates = serde_json::from_slice(include_bytes!(
-        "./assets-1.14.4/assets/minecraft/blockstates/stone_pressure_plate.json"
+        "./assets-1.14/assets/minecraft/blockstates/stone_pressure_plate.json"
     ))
     .unwrap();
 
@@ -256,9 +256,9 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
 }
 
 #[test]
-fn multipart_1_10() {
+fn multipart_1_9() {
     do_multipart_test(
-        include_bytes!("./assets-1.10/assets/minecraft/blockstates/cobblestone_wall.json"),
+        include_bytes!("./assets-1.9/assets/minecraft/blockstates/cobblestone_wall.json"),
         Version::Pre_1_13,
     );
 }
@@ -272,17 +272,17 @@ fn multipart_1_11() {
 }
 
 #[test]
-fn multipart_1_12_2() {
+fn multipart_1_12() {
     do_multipart_test(
-        include_bytes!("./assets-1.12.2/assets/minecraft/blockstates/cobblestone_wall.json"),
+        include_bytes!("./assets-1.12/assets/minecraft/blockstates/cobblestone_wall.json"),
         Version::Pre_1_13,
     );
 }
 
 #[test]
-fn multipart_1_14_4() {
+fn multipart_1_14() {
     do_multipart_test(
-        include_bytes!("./assets-1.14.4/assets/minecraft/blockstates/cobblestone_wall.json"),
+        include_bytes!("./assets-1.14/assets/minecraft/blockstates/cobblestone_wall.json"),
         Version::Post_1_13,
     );
 }
@@ -290,7 +290,7 @@ fn multipart_1_14_4() {
 #[test]
 fn multipart_with_or() {
     let blockstates: BlockStates = serde_json::from_slice(include_bytes!(
-        "./assets-1.14.4/assets/minecraft/blockstates/redstone_wire.json"
+        "./assets-1.14/assets/minecraft/blockstates/redstone_wire.json"
     ))
     .unwrap();
 
@@ -328,7 +328,7 @@ fn multipart_with_or() {
 #[test]
 fn multipart_with_boolean_values() {
     let blockstates: BlockStates = serde_json::from_slice(include_bytes!(
-        "./assets-1.14.4/assets/minecraft/blockstates/mossy_cobblestone_wall.json"
+        "./assets-1.14/assets/minecraft/blockstates/mossy_cobblestone_wall.json"
     ))
     .unwrap();
 
@@ -361,8 +361,8 @@ fn can_parse_all_blockstates_1_8() {
 }
 
 #[test]
-fn can_parse_all_blockstates_1_10() {
-    parse_all_blockstates_in_version("1.10");
+fn can_parse_all_blockstates_1_9() {
+    parse_all_blockstates_in_version("1.9");
 }
 
 #[test]
@@ -371,11 +371,11 @@ fn can_parse_all_blockstates_1_11() {
 }
 
 #[test]
-fn can_parse_all_blockstates_1_12_2() {
-    parse_all_blockstates_in_version("1.12.2");
+fn can_parse_all_blockstates_1_12() {
+    parse_all_blockstates_in_version("1.12");
 }
 
 #[test]
-fn can_parse_all_blockstates_1_14_4() {
-    parse_all_blockstates_in_version("1.14.4");
+fn can_parse_all_blockstates_1_14() {
+    parse_all_blockstates_in_version("1.14");
 }

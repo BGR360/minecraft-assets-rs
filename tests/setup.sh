@@ -39,7 +39,7 @@ if [ ! -d "${ASSETS_DIR}/.git" ]; then
 fi
 
 checkout_assets "1.8"
-checkout_assets "1.10"
+checkout_assets "1.9"
 checkout_assets "1.11"
-checkout_assets "1.12.2"
-checkout_assets "1.14.4"
+checkout_assets "1.12"
+checkout_assets "1.14"
