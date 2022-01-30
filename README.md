@@ -9,7 +9,9 @@ data files in the Minecraft `assets/` directory.
 
 ## Documentation
 
-Generate and view rustdocs by running:
+View the up-to-date rustdocs [here](https://bgr360.github.io/minecraft-assets-rs/minecraft_assets/).
+
+Or generate and view them locally by running:
 
 ```
 $ cargo doc --open
