@@ -1,0 +1,3 @@
+[submodule "tests/minecraft-assets"]
+	path = tests/minecraft-assets
+	url = https://github.com/InventivetalentDev/minecraft-assets.git

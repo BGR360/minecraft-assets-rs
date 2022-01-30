@@ -1,6 +1,19 @@
 [package]
-name = "minecraft-assets-rs"
+name = "minecraft-assets"
 version = "0.0.0"
 edition = "2021"
 
 [dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+maplit = "1"
+
+[features]
+
+default = []
+
+# Enables the integration tests in the `tests/` directory.
+# These tests require fetching the `minecraft-assets` submodule.
+tests = []
