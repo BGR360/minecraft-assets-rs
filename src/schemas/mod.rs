@@ -2,3 +2,4 @@
 //! directory.
 
 pub mod blockstates;
+pub mod models;
