@@ -5,7 +5,7 @@ use std::assert_eq;
 use assert_matches::assert_matches;
 use maplit::hashmap;
 
-use minecraft_assets::models::blockstates::{
+use minecraft_assets::schemas::blockstates::{
     multipart::{Case, Condition, WhenClause},
     BlockStates, Model, Variant,
 };

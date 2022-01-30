@@ -5,4 +5,4 @@
 
 #![warn(missing_docs)]
 
-pub mod models;
+pub mod schemas;
