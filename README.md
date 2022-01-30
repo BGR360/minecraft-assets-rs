@@ -1,28 +1,26 @@
 # minecraft-assets
 
+[![Crates.io](https://img.shields.io/crates/v/minecraft-assets.svg)](https://crates.io/crates/minecraft-assets)
+[![Docs.rs](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/minecraft-assets)
+
 Parsing Minecraft asset files and resource packs in Rust.
 
 This crate provides types that can be used with [`serde_json`] to parse the
-data files in the Minecraft `assets/` directory.
+data files in the Minecraft `assets/` directory or in a resource pack.
 
 [`serde_json`]: https://lib.rs/crates/serde_json
 
 ## Documentation
 
-View the up-to-date rustdocs [here](https://bgr360.github.io/minecraft-assets-rs/minecraft_assets/).
-
-Or generate and view them locally by running:
-
-```
-$ cargo doc --open
-```
+* [Main Branch (github.io)](https://bgr360.github.io/minecraft-assets-rs/minecraft_assets/)
+* [Latest Release (docs.rs)](https://docs.rs/minecraft-assets)
 
 ## Tests
 
 Integration tests in [`tests/`](tests/) use the actual asset files from the
 [`minecraft-assets`] repository.
 
-This repository is fairly large (~1 GB), so the tests in `tests/` do not run by
+That repository is fairly large (~1 GB), so the tests in `tests/` do not run by
 default. If you'd like to run them, use the [`tests/setup.sh`](tests/setup.sh)
 script:
 
