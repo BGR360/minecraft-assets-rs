@@ -6,41 +6,60 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-/// Block states as stored in `blockstates/{}.json`.
+/// Block states as stored in the `assets/<namespace>/blockstates` directory.
 ///
 /// There are several different variants of some blocks (like [doors], which can
 /// be open or closed), hence each block has its own [block state] file, which
 /// lists all its existing variants and links them to their corresponding
-/// models. Blocks can also be compound of several different models at the same
+/// models.
+///
+/// Blocks can also be compound of several different models at the same
 /// time, called "multipart". The models are then used depending on the block
 /// states of the block.
-///
-/// These files are stored in the following folder:
-/// `assets/<namespace>/blockstates`. The files are used directly based on their
-/// filename, thus a block state file with another name than the existing ones
-/// does not affect any block.
 ///
 /// See also the corresponding section of the [wiki page].
 ///
 /// [doors]: https://minecraft.fandom.com/wiki/Door
 /// [block state]: https://minecraft.fandom.com/wiki/Block_state
 /// [wiki page]: <https://minecraft.fandom.com/wiki/Model#Block_states>
-#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
-pub struct BlockStates {
-    /// Holds all the variants of the block by name.
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(untagged)]
+pub enum BlockStates {
+    /// One way of representing the different states of a block.
     ///
-    /// The variant name consists of the relevant block states separated by
-    /// commas, for example, `"face=wall,facing=east,powered=false"`.
+    /// This uses a map from variant name to block variant. The variant name
+    /// consists of the relevant block states separated by commas, for example,
+    /// `"face=wall,facing=east,powered=false"`.
     ///
     /// A block with just one variant uses `""` as the name for its variant.
-    pub variants: HashMap<String, Variant>,
+    Variants {
+        /// Holds all the variants of the block by name.
+        variants: HashMap<String, Variant>,
+    },
+
+    /// Another way of representing the different states of a block.
+    ///
+    /// This uses a list of "cases" that specify when a particular model should
+    /// apply.
+    Multipart {
+        /// Holds all the cases and the models that should apply in each case.
+        multipart: Vec<multipart::Case>,
+    },
+}
+
+impl Default for BlockStates {
+    fn default() -> Self {
+        Self::Variants {
+            variants: Default::default(),
+        }
+    }
 }
 
 /// A block variant.
 ///
-/// Each variant can have one model or an array of models and contains their
-/// properties. If set to an array, the model is chosen randomly from the models
-/// contained in the array based on the `Model::weight` field.
+/// Each variant can have **one model** or an **array of models** and contains
+/// their properties. If set to an array, the model is chosen randomly from the
+/// models contained in the array based on the `Model::weight` field.
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum Variant {
@@ -87,7 +106,7 @@ pub struct Model {
 
     /// Can be `true` or `false` (default). Locks the rotation of the texture of
     /// a block, if set to `true`. This way the texture does not rotate with the
-    /// block when using the [`x`] and [`y`] fields above.
+    /// block when using the `x` and `y` fields above.
     ///
     /// See the example on the [wiki page].
     ///
@@ -104,4 +123,93 @@ pub struct Model {
     /// would then be determined by dividing each weight by 4: 1/4, 1/4 and 2/4,
     /// or 25%, 25% and 50%, respectively.)
     pub weight: Option<u32>,
+}
+
+/// Types used to compose [`BlockStates::Multipart`].
+pub mod multipart {
+    use super::*;
+
+    /// Determines a case and the model that should apply in that case.
+    #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
+    pub struct Case {
+        /// A list of cases that have to be met for the model to be applied.
+        ///
+        /// If unset, the model always applies.
+        pub when: Option<WhenClause>,
+
+        /// Determines the model(s) to apply and its properties.
+        pub apply: Variant,
+    }
+
+    /// A list of conditions that have to be met for a model to be applied.
+    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+    #[serde(untagged)]
+    pub enum WhenClause {
+        /// A `when` clause that is true when the given condition is true.
+        Single(Condition),
+
+        /// A `when` clause that is true when any of the given conditions is true.
+        Or {
+            /// The conditions in the `OR` clause.
+            #[serde(rename = "OR")]
+            or: Vec<Condition>,
+        },
+    }
+
+    impl WhenClause {
+        /// Returns all of the [`Condition`]s of this when clause as a slice.
+        ///
+        /// The slice will contain one element for a [`Single`][Self::Single]
+        /// variant, and multiple for an [`Or`][Self::Or] variant.
+        pub fn conditions(&self) -> &[Condition] {
+            match self {
+                Self::Single(condition) => std::slice::from_ref(condition),
+                Self::Or { or } => &or[..],
+            }
+        }
+    }
+
+    /// A set of conditions that **all** have to match the block to return true.
+    ///
+    /// The condition is structured as a map from `state` to `value`, so for instance:
+    ///
+    /// ```json
+    /// "when": {"north": "side|up", "east": "side|up" }
+    /// ```
+    #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
+    pub struct Condition(pub HashMap<String, StateValue>);
+
+    /// The right-hand side of a [`Condition`] requirement.
+    ///
+    /// ```txt
+    /// "when": {"north": "side|up", "east": false }
+    ///                   ^^^^^^^^^          ^^^^^
+    /// ```
+    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+    #[serde(untagged)]
+    pub enum StateValue {
+        /// Unquoted bool value.
+        Bool(bool),
+
+        /// String value (possibly boolean-like, i.e., `"true"` or `"false"`).
+        String(String),
+    }
+
+    impl From<bool> for StateValue {
+        fn from(source: bool) -> Self {
+            Self::Bool(source)
+        }
+    }
+
+    impl<'a> From<&'a str> for StateValue {
+        fn from(source: &'a str) -> Self {
+            Self::String(String::from(source))
+        }
+    }
+
+    impl From<String> for StateValue {
+        fn from(source: String) -> Self {
+            Self::String(source)
+        }
+    }
 }
