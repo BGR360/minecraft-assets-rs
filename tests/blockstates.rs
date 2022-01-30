@@ -68,6 +68,30 @@ fn do_single_variant_test(bytes: &[u8], version: Version) {
 }
 
 #[test]
+fn single_variant_1_8() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.8/assets/minecraft/blockstates/oak_planks.json"),
+        Version::Pre_1_13,
+    );
+}
+
+#[test]
+fn single_variant_1_10() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.10/assets/minecraft/blockstates/oak_planks.json"),
+        Version::Pre_1_13,
+    );
+}
+
+#[test]
+fn single_variant_1_11() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.11/assets/minecraft/blockstates/oak_planks.json"),
+        Version::Pre_1_13,
+    );
+}
+
+#[test]
 fn single_variant_1_12_2() {
     do_single_variant_test(
         include_bytes!("./assets-1.12.2/assets/minecraft/blockstates/oak_planks.json"),
@@ -112,6 +136,30 @@ fn do_single_variant_multiple_models_test(bytes: &[u8], version: Version) {
     };
 
     assert_eq!(actual, expected);
+}
+
+#[test]
+fn single_variant_multiple_models_1_8() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.8/assets/minecraft/blockstates/stone.json"),
+        Version::Pre_1_13,
+    );
+}
+
+#[test]
+fn single_variant_multiple_models_1_10() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.10/assets/minecraft/blockstates/stone.json"),
+        Version::Pre_1_13,
+    );
+}
+
+#[test]
+fn single_variant_multiple_models_1_11() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.11/assets/minecraft/blockstates/stone.json"),
+        Version::Pre_1_13,
+    );
 }
 
 #[test]
@@ -208,6 +256,22 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
 }
 
 #[test]
+fn multipart_1_10() {
+    do_multipart_test(
+        include_bytes!("./assets-1.10/assets/minecraft/blockstates/cobblestone_wall.json"),
+        Version::Pre_1_13,
+    );
+}
+
+#[test]
+fn multipart_1_11() {
+    do_multipart_test(
+        include_bytes!("./assets-1.11/assets/minecraft/blockstates/cobblestone_wall.json"),
+        Version::Pre_1_13,
+    );
+}
+
+#[test]
 fn multipart_1_12_2() {
     do_multipart_test(
         include_bytes!("./assets-1.12.2/assets/minecraft/blockstates/cobblestone_wall.json"),
@@ -289,6 +353,21 @@ fn parse_all_blockstates_in_version(version: &str) {
         "tests/assets-{}/assets/minecraft/blockstates",
         version
     ));
+}
+
+#[test]
+fn can_parse_all_blockstates_1_8() {
+    parse_all_blockstates_in_version("1.8");
+}
+
+#[test]
+fn can_parse_all_blockstates_1_10() {
+    parse_all_blockstates_in_version("1.10");
+}
+
+#[test]
+fn can_parse_all_blockstates_1_11() {
+    parse_all_blockstates_in_version("1.11");
 }
 
 #[test]

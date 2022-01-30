@@ -38,5 +38,8 @@ if [ ! -d "${ASSETS_DIR}/.git" ]; then
     git submodule update
 fi
 
+checkout_assets "1.8"
+checkout_assets "1.10"
+checkout_assets "1.11"
 checkout_assets "1.12.2"
 checkout_assets "1.14.4"
