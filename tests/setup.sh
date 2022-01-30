@@ -21,7 +21,7 @@ checkout_assets() {
     VERSION=$1
     VERSION_DIR="${TESTS_DIR}/assets-${VERSION}"
 
-    if [ ! -d "${VERSION_DIR}/.git" ]; then
+    if [ ! -e "${VERSION_DIR}/.git" ]; then
         echo "============ Checking out assets version ${VERSION} ============="
 
         git -C "${ASSETS_DIR}" worktree add "${VERSION_DIR}" "${VERSION}"
@@ -38,4 +38,5 @@ if [ ! -d "${ASSETS_DIR}/.git" ]; then
     git submodule update
 fi
 
+checkout_assets "1.12.2"
 checkout_assets "1.14.4"
