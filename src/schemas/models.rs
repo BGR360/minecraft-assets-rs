@@ -198,6 +198,8 @@ pub struct Textures {
 /// or another texture [`variable`] to take its value from.
 ///
 /// [texture variable]: Texture#texture-variables
+/// [`location`]: Self::location
+/// [`variable`]: Self::variable
 #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct Texture(pub String);
 
@@ -401,6 +403,10 @@ impl Default for ElementFace {
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct OverrideCase {
     /// Specifies when this override should be active.
+    ///
+    /// See the [wiki page] for a list of possible item predicates.
+    ///
+    /// [wiki page]: <https://minecraft.fandom.com/wiki/Model#Item_predicates>
     pub predicate: HashMap<String, PredicateValue>,
 
     /// The path to the model to use if the case is met, in form of a [resource

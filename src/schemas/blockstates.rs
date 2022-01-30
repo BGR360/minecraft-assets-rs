@@ -89,10 +89,11 @@ impl Variant {
     }
 }
 
-/// Contains the properties of a model.
+/// Contains the properties of a model that is used to render all or part of a
+/// block in a particular state.
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Model {
-    /// Specifies the path to the model file of the block, in form of a
+    /// Specifies the path to the model file of the block, in the form of a
     /// [resource location].
     ///
     /// [resource location]: <https://minecraft.fandom.com/wiki/Model#File_path>
@@ -159,7 +160,7 @@ impl Default for Model {
 pub mod multipart {
     use super::*;
 
-    /// Determines a case and the model that should apply in that case.
+    /// Specifies a case and the model that should apply in that case.
     #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
     pub struct Case {
         /// A list of cases that have to be met for the model to be applied.
@@ -167,7 +168,7 @@ pub mod multipart {
         /// If unset, the model always applies.
         pub when: Option<WhenClause>,
 
-        /// Determines the model(s) to apply and its properties.
+        /// Specifies the model(s) to apply and its properties.
         pub apply: Variant,
     }
 
