@@ -1,0 +1,33 @@
+name: rustdoc
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  rustdoc:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Build documentation
+        run: cargo doc
+
+      - name: Deploy docs
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./target/doc
+          force_orphan: true
