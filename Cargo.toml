@@ -1,7 +1,17 @@
 [package]
 name = "minecraft-assets"
-version = "0.0.0"
+version = "0.0.1"
 edition = "2021"
+description = "Parsing Minecraft asset files in Rust"
+repository = "https://github.com/BGR360/minecraft-assets-rs"
+homepage = "https://github.com/BGR360/minecraft-assets-rs"
+readme = "README.md"
+license = "MIT"
+keywords = ["gamedev", "minecraft", "assets"]
+categories = ["game-development", "parsing", ]
+exclude = [
+    "tests/*",
+]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
