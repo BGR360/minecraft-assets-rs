@@ -109,6 +109,7 @@ pub struct Display {
 pub struct Transform {
     /// Specifies the rotation of the model in degrees according to the scheme
     /// `[x, y, z]`.
+    #[serde(default = "Transform::zeros")]
     pub rotation: [f32; 3],
 
     /// Specifies the position of the model according to the scheme `[x, y, z]`.
@@ -116,12 +117,24 @@ pub struct Transform {
     /// The unit of distance is **1/16th of a block** (0.0625 meters).
     ///
     /// The values should be clamped between -80 and 80.
+    #[serde(default = "Transform::zeros")]
     pub translation: [f32; 3],
 
     /// Specifies the scale of the model according to the scheme `[x, y, z]`.
     ///
     /// If the value is greater than 4, it is displayed as 4.
+    #[serde(default = "Transform::ones")]
     pub scale: [f32; 3],
+}
+
+impl Transform {
+    pub(crate) const fn zeros() -> [f32; 3] {
+        [0.0; 3]
+    }
+
+    pub(crate) const fn ones() -> [f32; 3] {
+        [1.0; 3]
+    }
 }
 
 impl Default for Transform {
@@ -451,8 +464,11 @@ pub enum Axis {
 #[serde(rename_all = "lowercase")]
 #[allow(missing_docs)]
 pub enum BlockFace {
-    // TODO: support "bottom" here as well
+    /// One of two possible names for `"down"` supported by the format.
+    Bottom,
+    /// One of two possible names for `"down"` supported by the format.
     Down,
+
     Up,
     North,
     South,

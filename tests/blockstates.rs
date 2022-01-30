@@ -1,7 +1,5 @@
 #![cfg(feature = "tests")]
 
-use std::assert_eq;
-
 use assert_matches::assert_matches;
 use maplit::hashmap;
 
@@ -9,6 +7,8 @@ use minecraft_assets::schemas::blockstates::{
     multipart::{Case, Condition, WhenClause},
     BlockStates, Model, Variant,
 };
+
+mod common;
 
 macro_rules! condition {
     (
@@ -282,4 +282,21 @@ fn multipart_with_boolean_values() {
             assert_eq!(multipart[0], expected_case);
         }
     )
+}
+
+fn parse_all_blockstates_in_version(version: &str) {
+    common::parse_all_in_dir::<BlockStates>(&format!(
+        "tests/assets-{}/assets/minecraft/blockstates",
+        version
+    ));
+}
+
+#[test]
+fn can_parse_all_blockstates_1_12_2() {
+    parse_all_blockstates_in_version("1.12.2");
+}
+
+#[test]
+fn can_parse_all_blockstates_1_14_4() {
+    parse_all_blockstates_in_version("1.14.4");
 }
