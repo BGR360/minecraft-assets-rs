@@ -1,5 +1,7 @@
 # minecraft-assets
 
+[![Docs.rs](https://docs.rs/minecraft-assets/badge.svg)](https://docs.rs/minecraft-assets)
+
 Parsing Minecraft asset files in Rust.
 
 This crate provides types that can be used with [`serde_json`] to parse the
@@ -9,20 +11,15 @@ data files in the Minecraft `assets/` directory.
 
 ## Documentation
 
-View the up-to-date rustdocs [here](https://bgr360.github.io/minecraft-assets-rs/minecraft_assets/).
-
-Or generate and view them locally by running:
-
-```
-$ cargo doc --open
-```
+* [Main Branch (github.io)](https://bgr360.github.io/minecraft-assets-rs/minecraft_assets/)
+* [Latest Release (docs.rs)](https://docs.rs/minecraft-assets)
 
 ## Tests
 
 Integration tests in [`tests/`](tests/) use the actual asset files from the
 [`minecraft-assets`] repository.
 
-This repository is fairly large (~1 GB), so the tests in `tests/` do not run by
+That repository is fairly large (~1 GB), so the tests in `tests/` do not run by
 default. If you'd like to run them, use the [`tests/setup.sh`](tests/setup.sh)
 script:
 
