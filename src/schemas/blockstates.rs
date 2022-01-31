@@ -1,4 +1,7 @@
-//! Serde-(de)serializable data types for `blockstates/*.json`.
+//! Serde-(de)serializable data types for
+//! `assets/<namespace>/blockstates/*.json`.
+//!
+//! Start here: [`BlockStates`]
 //!
 //! See <https://minecraft.fandom.com/wiki/Model#Block_states>.
 
@@ -43,7 +46,8 @@ pub enum BlockStates {
     /// apply.
     Multipart {
         /// Holds all the cases and the models that should apply in each case.
-        multipart: Vec<multipart::Case>,
+        #[serde(rename = "multipart")]
+        cases: Vec<multipart::Case>,
     },
 }
 
@@ -68,7 +72,7 @@ impl BlockStates {
     pub fn cases(&self) -> Option<&[multipart::Case]> {
         match self {
             Self::Variants { .. } => None,
-            Self::Multipart { multipart } => Some(&multipart[..]),
+            Self::Multipart { cases: multipart } => Some(&multipart[..]),
         }
     }
 }

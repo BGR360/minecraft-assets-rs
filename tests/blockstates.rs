@@ -216,7 +216,7 @@ fn do_multipart_test(bytes: &[u8], version: Flattening) {
     let actual: BlockStates = serde_json::from_slice(bytes).unwrap();
 
     let expected = BlockStates::Multipart {
-        multipart: vec![
+        cases: vec![
             Case {
                 when: Some(WhenClause::Single(condition! { "up" => "true" })),
                 apply: Variant::Single(ModelProperties {
@@ -343,8 +343,8 @@ fn multipart_with_or() {
 
     assert_matches!(
         blockstates,
-        BlockStates::Multipart { multipart } => {
-            assert_eq!(multipart[0], expected_case);
+        BlockStates::Multipart { cases } => {
+            assert_eq!(cases[0], expected_case);
         }
     );
 }
@@ -368,8 +368,8 @@ fn multipart_with_boolean_values() {
 
     assert_matches!(
         blockstates,
-        BlockStates::Multipart { multipart } => {
-            assert_eq!(multipart[0], expected_case);
+        BlockStates::Multipart { cases } => {
+            assert_eq!(cases[0], expected_case);
         }
     )
 }

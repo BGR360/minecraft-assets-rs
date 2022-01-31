@@ -1,4 +1,7 @@
-//! Serde-(de)serializable data types for `models/{block,item}/*.json`.
+//! Serde-(de)serializable data types for
+//! `assets/<namespace>/models/{block,item}/*.json`.
+//!
+//! Start here: [`Model`].
 //!
 //! See <https://minecraft.fandom.com/wiki/Model#Block_models>.
 
