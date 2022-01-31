@@ -190,17 +190,17 @@ impl<'a> ResourceIdentifier<'a> {
     ///
     /// ```
     /// # use minecraft_assets::api::*;
-    /// let ident = ResourceIdentifier::from("stone");
-    /// assert_eq!(ident.as_str(), "stone");
+    /// let id = ResourceIdentifier::from("stone");
+    /// assert_eq!(id.as_str(), "stone");
     ///
-    /// let ident = ResourceIdentifier::from("minecraft:dirt");
-    /// assert_eq!(ident.as_str(), "minecraft:dirt");
+    /// let id = ResourceIdentifier::from("minecraft:dirt");
+    /// assert_eq!(id.as_str(), "minecraft:dirt");
     /// ```
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
-    /// Returns whether or not this resource location includes an explicit
+    /// Returns whether or not this resource identifier includes an explicit
     /// namespace.
     ///
     /// # Example
@@ -217,7 +217,8 @@ impl<'a> ResourceIdentifier<'a> {
         self.colon_position().is_some()
     }
 
-    /// Returns the namespace portion of the resource location.
+    /// Returns the namespace portion of the resource identifier, or
+    /// `"minecraft"` if it does not have an explicit namespace.
     ///
     /// # Example
     ///
@@ -238,7 +239,7 @@ impl<'a> ResourceIdentifier<'a> {
             .unwrap_or_else(|| MINECRAFT_NAMESPACE)
     }
 
-    /// Returns the path portion of the resource location.
+    /// Returns the path portion of the resource identifier.
     ///
     /// # Example
     ///
@@ -271,8 +272,8 @@ impl<'a> ResourceIdentifier<'a> {
     ///
     /// ```
     /// # use minecraft_assets::api::*;
-    /// let ident = ResourceIdentifier::from("stone");
-    /// let canonical = ident.to_canonical();
+    /// let id = ResourceIdentifier::from("stone");
+    /// let canonical = id.to_canonical();
     ///
     /// assert_eq!(canonical.as_str(), "minecraft:stone");
     /// ```
@@ -281,14 +282,14 @@ impl<'a> ResourceIdentifier<'a> {
     ///
     /// ```
     /// # use minecraft_assets::api::*;
-    /// let ident = ResourceIdentifier::from("foo:bar");
-    /// let canonical = ident.to_canonical();
+    /// let id = ResourceIdentifier::from("foo:bar");
+    /// let canonical = id.to_canonical();
     ///
     /// assert_eq!(canonical.as_str(), "foo:bar");
     ///
     /// // Prove that it was a cheap copy.
     /// assert_eq!(
-    ///     ident.as_str().as_ptr() as usize,
+    ///     id.as_str().as_ptr() as usize,
     ///     canonical.as_str().as_ptr() as usize,
     /// );
     /// ```
@@ -318,10 +319,10 @@ impl<'a> ResourceIdentifier<'a> {
     /// # use minecraft_assets::api::*;
     /// let string = String::from("my:ident");
     ///
-    /// let ident = ResourceIdentifier::from(&string);
+    /// let id = ResourceIdentifier::from(&string);
     ///
     /// // Identifier borrows data from `string`, cannot be sent across threads.
-    /// std::thread::spawn(move || println!("{}", ident));
+    /// std::thread::spawn(move || println!("{}", id));
     /// ```
     ///
     /// Calling [`into_owned()`][Self::into_owned] on the identifier allows it
@@ -331,10 +332,10 @@ impl<'a> ResourceIdentifier<'a> {
     /// # use minecraft_assets::api::*;
     /// let string = String::from("my:ident");
     ///
-    /// let ident = ResourceIdentifier::from(&string);
-    /// let ident = ident.into_owned();
+    /// let id = ResourceIdentifier::from(&string);
+    /// let id = id.into_owned();
     ///
-    /// std::thread::spawn(move || println!("{}", ident));
+    /// std::thread::spawn(move || println!("{}", id));
     /// ```
     pub fn into_owned(&self) -> ResourceIdentifier<'static> {
         let string = self.0.deref().to_owned();
@@ -379,7 +380,7 @@ impl<'a> fmt::Display for ResourceIdentifier<'a> {
 ///
 /// Prior to 1.13, model identifiers found in
 /// `assets/<namespace>/blockstates/*.json` did not include a prefix like
-/// `block/` or `ident/` to disambiguate between different types of models.
+/// `block/` or `item/` to disambiguate between different types of models.
 ///
 /// Because of this, the `minecraft-assets` API forces the user to always
 /// specify which type of model they are trying to load (note the existence of
@@ -402,20 +403,20 @@ impl<'a> ModelIdentifier<'a> {
     ///
     /// ```
     /// # use minecraft_assets::api::*;
-    /// let ident = ModelIdentifier::from("stone");
-    /// assert_eq!(ident.model_name(), "stone");
-    /// let ident = ModelIdentifier::from("foo:stone");
-    /// assert_eq!(ident.model_name(), "stone");
+    /// let id = ModelIdentifier::from("stone");
+    /// assert_eq!(id.model_name(), "stone");
+    /// let id = ModelIdentifier::from("foo:stone");
+    /// assert_eq!(id.model_name(), "stone");
     ///
-    /// let ident = ModelIdentifier::from("block/oak_planks");
-    /// assert_eq!(ident.model_name(), "oak_planks");
-    /// let ident = ModelIdentifier::from("foo:block/oak_planks");
-    /// assert_eq!(ident.model_name(), "oak_planks");
+    /// let id = ModelIdentifier::from("block/oak_planks");
+    /// assert_eq!(id.model_name(), "oak_planks");
+    /// let id = ModelIdentifier::from("foo:block/oak_planks");
+    /// assert_eq!(id.model_name(), "oak_planks");
     ///
-    /// let ident = ModelIdentifier::from("item/diamond_hoe");
-    /// assert_eq!(ident.model_name(), "diamond_hoe");
-    /// let ident = ModelIdentifier::from("foo:item/diamond_hoe");
-    /// assert_eq!(ident.model_name(), "diamond_hoe");
+    /// let id = ModelIdentifier::from("item/diamond_hoe");
+    /// assert_eq!(id.model_name(), "diamond_hoe");
+    /// let id = ModelIdentifier::from("foo:item/diamond_hoe");
+    /// assert_eq!(id.model_name(), "diamond_hoe");
     ///
     /// ```
     pub fn model_name(&self) -> &str {

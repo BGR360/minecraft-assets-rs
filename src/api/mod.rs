@@ -1,4 +1,6 @@
 //! An API for programmatically accessing Minecraft asset data.
+//!
+//! Start here: [`AssetPack`].
 
 use std::io;
 

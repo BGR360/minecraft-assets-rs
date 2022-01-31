@@ -12,7 +12,7 @@ use crate::{
     schemas::{BlockStates, Model},
 };
 
-/// A collection of Minecraft assets at a given file path.
+/// A struct that can read Minecraft assets from a single root directory.
 #[derive(Clone)]
 pub struct AssetPack {
     /// Path to the directory that **contains** the `assets
@@ -47,7 +47,7 @@ impl AssetPack {
         }
     }
 
-    /// Returns the full path the directory containing the given
+    /// Returns the full path to the directory containing the given
     /// [`ResourceLocation`].
     ///
     /// **NOTE:** no validation of the path is performed. The returned path may
