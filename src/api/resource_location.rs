@@ -83,17 +83,17 @@ impl<'a> ResourceLocation<'a> {
 
 /// A namespaced identifier for an undetermined type of resource.
 ///
-/// A valid resource location has a format of `namespace:path`. If the
-/// `namespace` portion is left out, then `minecraft` is the implied namespace.
+/// A valid resource location has a format of `"namespace:path"`. If the
+/// `namespace` portion is left out, then `"minecraft"` is the implied
+/// namespace.
 ///
 /// # Borrowing / Ownership
 ///
 /// To avoid cloning / [`String`] construction when not necessary, this type can
 /// either borrow or take ownership of the underlying string.
 ///
-/// Unless you call [`to_owned()`][Self::to_owned]
-///
-///
+/// By default, no copying or allocating is done. You must call
+/// [`to_owned()`][Self::to_owned] to get an owned identifier.
 #[derive(Clone)]
 pub struct ResourceIdentifier<'a>(Cow<'a, str>);
 
@@ -104,6 +104,11 @@ impl<'a> ResourceIdentifier<'a> {
     ///
     /// ```
     /// # use minecraft_assets::api::*;
+    /// let ident = ResourceIdentifier::from("stone");
+    /// assert_eq!(ident.as_str(), "stone");
+    ///
+    /// let ident = ResourceIdentifier::from("minecraft:dirt");
+    /// assert_eq!(ident.as_str(), "minecraft:dirt");
     /// ```
     pub fn as_str(&self) -> &str {
         &self.0
@@ -230,6 +235,19 @@ impl<'a> ResourceIdentifier<'a> {
     /// let ident = ResourceIdentifier::from(&string);
     ///
     /// // Identifier borrows data from `string`, cannot be sent across threads.
+    /// std::thread::spawn(move || println!("{}", ident));
+    /// ```
+    ///
+    /// Calling [`to_owned()`][Self::to_owned] on the identifier allows it to be
+    /// sent to the thread:
+    ///
+    /// ```
+    /// # use minecraft_assets::api::*;
+    /// let string = String::from("my:ident");
+    ///
+    /// let ident = ResourceIdentifier::from(&string);
+    /// let ident = ident.to_owned();
+    ///
     /// std::thread::spawn(move || println!("{}", ident));
     /// ```
     pub fn to_owned(&self) -> ResourceIdentifier<'static> {
