@@ -45,6 +45,31 @@ impl AssetPack {
         }
     }
 
+    /// Returns the full path the directory containing the given
+    /// [`ResourceLocation`].
+    ///
+    /// **NOTE:** no validation of the path is performed. The returned path may
+    /// not point to an existing directory. This method simply computes what the
+    /// path should be for a given resource.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::api::*;
+    /// let assets = AssetPack::at_path("~/.minecraft/");
+    ///
+    /// let loc = ResourceLocation::BlockStates("stone".into());
+    /// assert_eq!(
+    ///     assets.get_resource_directory(&loc).to_string_lossy(),
+    ///     "~/.minecraft/assets/minecraft/blockstates"
+    /// );
+    /// ```
+    pub fn get_resource_directory(&self, resource: &ResourceLocation) -> PathBuf {
+        let mut path = self.root.clone();
+        path.push(&resource.directory());
+        path
+    }
+
     /// Returns the full path to a resource given a [`ResourceLocation`].
     ///
     /// **NOTE:** no validation of the path is performed. The returned path may
@@ -170,6 +195,39 @@ impl AssetPack {
         self.load_model_recursive(&ResourceLocation::ItemModel(model.into()))
     }
 
+    /// Runs the given closure once for each file that exists in
+    /// `assets/<namespace>/blockstates/`.
+    ///
+    /// The closure is passed the full path to each file.
+    pub fn for_each_blockstates<F>(&self, op: F) -> Result<()>
+    where
+        F: FnMut(&Path),
+    {
+        self.for_each_file(&ResourceLocation::BlockStates("foo".into()), op)
+    }
+
+    /// Runs the given closure once for each file that exists in
+    /// `assets/<namespace>/models/block/`.
+    ///
+    /// The closure is passed the full path to each file.
+    pub fn for_each_block_model<F>(&self, op: F) -> Result<()>
+    where
+        F: FnMut(&Path),
+    {
+        self.for_each_file(&ResourceLocation::BlockModel("foo".into()), op)
+    }
+
+    /// Runs the given closure once for each file that exists in
+    /// `assets/<namespace>/models/item/`.
+    ///
+    /// The closure is passed the full path to each file.
+    pub fn for_each_item_model<F>(&self, op: F) -> Result<()>
+    where
+        F: FnMut(&Path),
+    {
+        self.for_each_file(&ResourceLocation::ItemModel("foo".into()), op)
+    }
+
     fn load_resource<T>(&self, resource: &ResourceLocation) -> Result<T>
     where
         T: DeserializeOwned,
@@ -200,8 +258,6 @@ impl AssetPack {
                 .as_ref()
                 .map(|parent| ModelIdentifier::from(ResourceIdentifier::from(parent).into_owned()));
 
-            println!("HULLO: {:?}", &model);
-
             op(model);
 
             if let Some(parent) = parent_owned {
@@ -213,6 +269,21 @@ impl AssetPack {
             } else {
                 break;
             }
+        }
+
+        Ok(())
+    }
+
+    fn for_each_file<F>(&self, resource: &ResourceLocation, mut op: F) -> Result<()>
+    where
+        F: FnMut(&Path),
+    {
+        let directory = self.get_resource_directory(resource);
+
+        for entry in fs::read_dir(directory)? {
+            let entry = entry?;
+
+            op(&entry.path())
         }
 
         Ok(())

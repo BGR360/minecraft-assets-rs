@@ -1,6 +1,7 @@
 #![cfg(feature = "tests")]
 
 use assert_matches::assert_matches;
+use std::path::PathBuf;
 
 use minecraft_assets::api::{AssetPack, ModelIdentifier};
 
@@ -104,14 +105,18 @@ fn load_item_model_recursive(assets: &AssetPack, version: &str) {
 }
 
 fn do_api_test(version: &str, flattening: Flattening) {
-    let root =
-        common::get_path_relative_to_manifest_dir(format!("tests/assets-{}", version)).unwrap();
-    let assets = AssetPack::at_path(root);
+    let assets = get_asset_pack(version);
 
     load_block_states(&assets, flattening);
     load_block_model(&assets);
     load_item_model(&assets, version);
     load_block_model_recursive(&assets, version);
+}
+
+fn get_asset_pack(version: &str) -> AssetPack {
+    let root =
+        common::get_path_relative_to_manifest_dir(format!("tests/assets-{}", version)).unwrap();
+    AssetPack::at_path(root)
 }
 
 #[test]
@@ -147,4 +152,40 @@ fn api_1_14() {
 #[test]
 fn api_1_15() {
     do_api_test("1.15", Flattening::Post);
+}
+
+#[test]
+fn for_each_blockstates() {
+    let assets = get_asset_pack("1.14");
+
+    let mut paths = Vec::new();
+    assets
+        .for_each_blockstates(|path| paths.push(PathBuf::from(path)))
+        .unwrap();
+
+    assert_eq!(paths.len(), 677);
+}
+
+#[test]
+fn for_each_block_model() {
+    let assets = get_asset_pack("1.14");
+
+    let mut paths = Vec::new();
+    assets
+        .for_each_block_model(|path| paths.push(PathBuf::from(path)))
+        .unwrap();
+
+    assert_eq!(paths.len(), 1201);
+}
+
+#[test]
+fn for_each_item_model() {
+    let assets = get_asset_pack("1.14");
+
+    let mut paths = Vec::new();
+    assets
+        .for_each_item_model(|path| paths.push(PathBuf::from(path)))
+        .unwrap();
+
+    assert_eq!(paths.len(), 1006);
 }
