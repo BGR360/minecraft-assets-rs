@@ -90,14 +90,15 @@ fn load_item_model_recursive(assets: &AssetPack, version: &str) {
 
     let expected = if version == "1.8" {
         vec![
-            assets.load_item_model("diamond_hoe").unwrap(),
-            assets.load_item_model("generated").unwrap(),
+            assets.load_item_model("item/diamond_hoe").unwrap(),
+            //assets.load_item_model("builtin/generated").unwrap(),
         ]
     } else {
         vec![
-            assets.load_item_model("diamond_hoe").unwrap(),
-            assets.load_item_model("handheld").unwrap(),
-            assets.load_item_model("generated").unwrap(),
+            assets.load_item_model("item/diamond_hoe").unwrap(),
+            assets.load_item_model("item/handheld").unwrap(),
+            assets.load_item_model("item/generated").unwrap(),
+            // assets.load_item_model("builtin/generated").unwrap(),
         ]
     };
 
@@ -111,6 +112,7 @@ fn do_api_test(version: &str, flattening: Flattening) {
     load_block_model(&assets);
     load_item_model(&assets, version);
     load_block_model_recursive(&assets, version);
+    load_item_model_recursive(&assets, version);
 }
 
 fn get_asset_pack(version: &str) -> AssetPack {

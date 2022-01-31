@@ -284,14 +284,16 @@ impl AssetPack {
 
             op(model);
 
-            if let Some(parent) = parent_owned {
-                current = match current {
-                    ResourceLocation::BlockModel(_) => ResourceLocation::BlockModel(parent),
-                    ResourceLocation::ItemModel(_) => ResourceLocation::ItemModel(parent),
-                    _ => unreachable!(),
-                };
-            } else {
-                break;
+            match parent_owned {
+                Some(parent) if !parent.is_builtin() => {
+                    println!("{}", parent.as_str());
+                    current = match current {
+                        ResourceLocation::BlockModel(_) => ResourceLocation::BlockModel(parent),
+                        ResourceLocation::ItemModel(_) => ResourceLocation::ItemModel(parent),
+                        _ => unreachable!(),
+                    };
+                }
+                _ => break,
             }
         }
 

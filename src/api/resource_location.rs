@@ -86,6 +86,25 @@ impl<'a> ResourceLocation<'a> {
         }
     }
 
+    /// Returns true if the resource location refers to a built-in resource.
+    ///
+    /// If true, then there is no corresponding file that contains the resource.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::api::*;
+    /// let loc = ResourceLocation::ItemModel("builtin/generated".into());
+    /// assert!(loc.is_builtin());
+    /// ```
+    pub fn is_builtin(&self) -> bool {
+        match self {
+            Self::BlockModel(id) | Self::ItemModel(id) => id.is_builtin(),
+
+            _ => false,
+        }
+    }
+
     /// Returns the path to the directory that should contain this resource's file,
     /// relative to the [`AssetPack`] root.
     ///
@@ -403,6 +422,16 @@ impl<'a> ModelIdentifier<'a> {
         self.slash_position()
             .map(|index| &self.0.path()[index + 1..])
             .unwrap_or_else(|| self.0.path())
+    }
+
+    pub(crate) fn is_builtin(&self) -> bool {
+        match self.slash_position() {
+            Some(index) => {
+                let prefix = &self.0.path()[..index];
+                prefix == "builtin"
+            }
+            None => false,
+        }
     }
 
     fn slash_position(&self) -> Option<usize> {
