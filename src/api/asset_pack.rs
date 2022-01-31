@@ -27,7 +27,6 @@ impl AssetPack {
     ///
     /// ```no_run
     /// use minecraft_assets::api::AssetPack;
-    /// use minecraft_assets::schemas::BlockStates;
     ///
     /// let assets = AssetPack::at_path("~/.minecraft/");
     ///
@@ -37,8 +36,8 @@ impl AssetPack {
     ///
     /// assert_eq!(variants.len(), 1);
     ///
-    /// let model = &variants[""].models()[0];
-    /// assert_eq!(model.model, "block/oak_planks");
+    /// let model_properties = &variants[""].models()[0];
+    /// assert_eq!(model_properties.model, "block/oak_planks");
     /// ```
     pub fn at_path(root_dir: impl AsRef<Path>) -> Self {
         Self {
