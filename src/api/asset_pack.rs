@@ -48,6 +48,10 @@ impl AssetPack {
 
     /// Returns the full path to a resource given a [`ResourceLocation`].
     ///
+    /// **NOTE:** no validation of the path is performed. The returned path may
+    /// not point to an existing file. This method simply computes what the path
+    /// should be for a given resource.
+    ///
     /// # Example
     ///
     /// ```
