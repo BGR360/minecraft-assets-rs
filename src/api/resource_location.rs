@@ -86,14 +86,36 @@ impl<'a> ResourceLocation<'a> {
         }
     }
 
-    /// Returns the path relative to `{assets,data}/<namespace>/` at which the
-    /// resource's file can be found.
-    pub fn directory(&self) -> &'static str {
-        match self {
+    /// Returns the path to the directory that should contain this resource's file,
+    /// relative to the [`AssetPack`] root.
+    ///
+    /// [`AssetPack`]: crate::api::AssetPack
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::api::*;
+    /// let loc = ResourceLocation::BlockStates("stone".into());
+    /// assert_eq!(
+    ///     loc.directory().to_string_lossy(),
+    ///     "assets/minecraft/blockstates"
+    /// );
+    /// ```
+    pub fn directory(&self) -> PathBuf {
+        let mut path = match self.kind() {
+            ResourceKind::Assets => PathBuf::from("assets"),
+            ResourceKind::Data => PathBuf::from("data"),
+        };
+        path.push(self.namespace());
+
+        let remaining = match self {
             Self::BlockStates(_) => "blockstates",
             Self::BlockModel(_) => "models/block",
             Self::ItemModel(_) => "models/item",
-        }
+        };
+        path.push(remaining);
+
+        path
     }
 
     /// Returns the file extension (e.g., `json`) used for this resource's file.
@@ -103,15 +125,23 @@ impl<'a> ResourceLocation<'a> {
         }
     }
 
-    /// Returns a file path relative to the asset root at which the resource can
-    /// be found.
+    /// Returns the path to the file that should contain this resource, relative
+    /// to the [`AssetPack`] root.
+    ///
+    /// [`AssetPack`]: crate::api::AssetPack
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::api::*;
+    /// let loc = ResourceLocation::BlockStates("stone".into());
+    /// assert_eq!(
+    ///     loc.path().to_string_lossy(),
+    ///     "assets/minecraft/blockstates/stone.json"
+    /// );
+    /// ```
     pub fn path(&self) -> PathBuf {
-        let mut path = match self.kind() {
-            ResourceKind::Assets => PathBuf::from("assets"),
-            ResourceKind::Data => PathBuf::from("data"),
-        };
-        path.push(self.namespace());
-        path.push(self.directory());
+        let mut path = self.directory();
         path.push(self.name());
 
         path.with_extension(self.extension())
