@@ -10,6 +10,8 @@ use minecraft_assets::schemas::blockstates::{
 
 mod common;
 
+use common::{model_path, parse_all_in_dir, single_variant_name, Flattening};
+
 macro_rules! condition {
     (
         $(
@@ -26,31 +28,7 @@ macro_rules! condition {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[allow(non_camel_case_types)]
-enum Version {
-    Pre_1_13,
-    Post_1_13,
-}
-
-// Prior to 1.13, single-variant blockstates had "normal" as their
-// variant name. In versions >= 1.13, the variant name is ""
-fn single_variant_name(version: Version) -> String {
-    match version {
-        Version::Pre_1_13 => String::from("normal"),
-        Version::Post_1_13 => String::from(""),
-    }
-}
-
-// In versions >= 1.13, model paths are prefixed with "block/".
-fn model_path(model: &str, version: Version) -> String {
-    match version {
-        Version::Pre_1_13 => String::from(model),
-        Version::Post_1_13 => format!("block/{}", model),
-    }
-}
-
-fn do_single_variant_test(bytes: &[u8], version: Version) {
+fn do_single_variant_test(bytes: &[u8], version: Flattening) {
     let variant_name = single_variant_name(version);
 
     let expected = BlockStates::Variants {
@@ -71,7 +49,7 @@ fn do_single_variant_test(bytes: &[u8], version: Version) {
 fn single_variant_1_8() {
     do_single_variant_test(
         include_bytes!("./assets-1.8/assets/minecraft/blockstates/oak_planks.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -79,7 +57,7 @@ fn single_variant_1_8() {
 fn single_variant_1_9() {
     do_single_variant_test(
         include_bytes!("./assets-1.9/assets/minecraft/blockstates/oak_planks.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -87,7 +65,7 @@ fn single_variant_1_9() {
 fn single_variant_1_11() {
     do_single_variant_test(
         include_bytes!("./assets-1.11/assets/minecraft/blockstates/oak_planks.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -95,7 +73,7 @@ fn single_variant_1_11() {
 fn single_variant_1_12() {
     do_single_variant_test(
         include_bytes!("./assets-1.12/assets/minecraft/blockstates/oak_planks.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -103,7 +81,7 @@ fn single_variant_1_12() {
 fn single_variant_1_13() {
     do_single_variant_test(
         include_bytes!("./assets-1.13/assets/minecraft/blockstates/oak_planks.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -111,7 +89,7 @@ fn single_variant_1_13() {
 fn single_variant_1_14() {
     do_single_variant_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/oak_planks.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -119,11 +97,11 @@ fn single_variant_1_14() {
 fn single_variant_1_15() {
     do_single_variant_test(
         include_bytes!("./assets-1.15/assets/minecraft/blockstates/oak_planks.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
-fn do_single_variant_multiple_models_test(bytes: &[u8], version: Version) {
+fn do_single_variant_multiple_models_test(bytes: &[u8], version: Flattening) {
     let actual: BlockStates = serde_json::from_slice(bytes).unwrap();
 
     let expected = BlockStates::Variants {
@@ -158,7 +136,7 @@ fn do_single_variant_multiple_models_test(bytes: &[u8], version: Version) {
 fn single_variant_multiple_models_1_8() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.8/assets/minecraft/blockstates/stone.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -166,7 +144,7 @@ fn single_variant_multiple_models_1_8() {
 fn single_variant_multiple_models_1_9() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.9/assets/minecraft/blockstates/stone.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -174,7 +152,7 @@ fn single_variant_multiple_models_1_9() {
 fn single_variant_multiple_models_1_11() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.11/assets/minecraft/blockstates/stone.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -182,7 +160,7 @@ fn single_variant_multiple_models_1_11() {
 fn single_variant_multiple_models_1_12() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.12/assets/minecraft/blockstates/stone.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -190,7 +168,7 @@ fn single_variant_multiple_models_1_12() {
 fn single_variant_multiple_models_1_13() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.13/assets/minecraft/blockstates/stone.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -198,7 +176,7 @@ fn single_variant_multiple_models_1_13() {
 fn single_variant_multiple_models_1_14() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/stone.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -206,7 +184,7 @@ fn single_variant_multiple_models_1_14() {
 fn single_variant_multiple_models_1_15() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.15/assets/minecraft/blockstates/stone.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -234,7 +212,7 @@ fn multiple_variants() {
     assert_eq!(actual, expected);
 }
 
-fn do_multipart_test(bytes: &[u8], version: Version) {
+fn do_multipart_test(bytes: &[u8], version: Flattening) {
     let actual: BlockStates = serde_json::from_slice(bytes).unwrap();
 
     let expected = BlockStates::Multipart {
@@ -291,7 +269,7 @@ fn do_multipart_test(bytes: &[u8], version: Version) {
 fn multipart_1_9() {
     do_multipart_test(
         include_bytes!("./assets-1.9/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -299,7 +277,7 @@ fn multipart_1_9() {
 fn multipart_1_11() {
     do_multipart_test(
         include_bytes!("./assets-1.11/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -307,7 +285,7 @@ fn multipart_1_11() {
 fn multipart_1_12() {
     do_multipart_test(
         include_bytes!("./assets-1.12/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Version::Pre_1_13,
+        Flattening::Pre,
     );
 }
 
@@ -315,7 +293,7 @@ fn multipart_1_12() {
 fn multipart_1_13() {
     do_multipart_test(
         include_bytes!("./assets-1.13/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -323,7 +301,7 @@ fn multipart_1_13() {
 fn multipart_1_14() {
     do_multipart_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -331,7 +309,7 @@ fn multipart_1_14() {
 fn multipart_1_15() {
     do_multipart_test(
         include_bytes!("./assets-1.15/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Version::Post_1_13,
+        Flattening::Post,
     );
 }
 
@@ -397,7 +375,7 @@ fn multipart_with_boolean_values() {
 }
 
 fn parse_all_blockstates_in_version(version: &str) {
-    common::parse_all_in_dir::<BlockStates>(&format!(
+    parse_all_in_dir::<BlockStates>(&format!(
         "tests/assets-{}/assets/minecraft/blockstates",
         version
     ));
