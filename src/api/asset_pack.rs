@@ -101,6 +101,34 @@ impl AssetPack {
         self.load_resource(&ResourceLocation::BlockModel(model.into()))
     }
 
+    /// Loads the block [`Model`] identified by the given name or path, as well
+    /// as all of its parents and ancestors.
+    ///
+    /// The models are returned as a list, with the first element being the
+    /// model that was originally requested, the next element being its parent,
+    /// and so on with the last element being the topmost parent.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use minecraft_assets::api::*;
+    /// # let assets = AssetPack::at_path("foo");
+    /// let models = assets.load_block_model_recursive("cube_all").unwrap();
+    ///
+    /// let expected = vec![
+    ///     assets.load_block_model("cube_all").unwrap(),
+    ///     assets.load_block_model("cube").unwrap(),
+    ///     assets.load_block_model("block").unwrap(),
+    /// ];
+    /// assert_eq!(models, expected);
+    /// ```
+    pub fn load_block_model_recursive<'a>(
+        &self,
+        model: impl Into<ModelIdentifier<'a>>,
+    ) -> Result<Vec<Model>> {
+        self.load_model_recursive(&ResourceLocation::BlockModel(model.into()))
+    }
+
     /// Loads the item [`Model`] identified by the given name or path.
     ///
     /// # Example
@@ -123,5 +151,43 @@ impl AssetPack {
         let file = fs::File::open(path)?;
         let resource: T = serde_json::from_reader(file)?;
         Ok(resource)
+    }
+
+    fn load_model_recursive(&self, resource: &ResourceLocation) -> Result<Vec<Model>> {
+        let mut models = Vec::new();
+
+        self.for_each_parent(resource.clone(), |model| models.push(model))?;
+
+        Ok(models)
+    }
+
+    fn for_each_parent<F>(&self, mut current: ResourceLocation, mut op: F) -> Result<()>
+    where
+        F: FnMut(Model),
+    {
+        loop {
+            let model: Model = self.load_resource(&current)?;
+
+            let parent_owned = model
+                .parent
+                .as_ref()
+                .map(|parent| ModelIdentifier::from(ResourceIdentifier::from(parent).into_owned()));
+
+            println!("HULLO: {:?}", &model);
+
+            op(model);
+
+            if let Some(parent) = parent_owned {
+                current = match current {
+                    ResourceLocation::BlockModel(_) => ResourceLocation::BlockModel(parent),
+                    ResourceLocation::ItemModel(_) => ResourceLocation::ItemModel(parent),
+                    _ => unreachable!(),
+                };
+            } else {
+                break;
+            }
+        }
+
+        Ok(())
     }
 }

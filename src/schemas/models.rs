@@ -6,7 +6,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-/// A block or item model as stored in the `assets/<namespace>/models/` directory.
+/// A block or item model as stored in the
+/// `assets/<namespace>/models/{block,item}/` directories.
 ///
 /// See also the corresponding section of the [wiki page]
 ///

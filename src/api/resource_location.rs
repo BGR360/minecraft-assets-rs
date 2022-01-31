@@ -130,7 +130,7 @@ impl<'a> ResourceLocation<'a> {
 /// either borrow or take ownership of the underlying string.
 ///
 /// By default, no copying or allocating is done. You must call
-/// [`to_owned()`][Self::to_owned] to get an owned identifier.
+/// [`into_owned()`][Self::into_owned] to get an owned identifier.
 #[derive(Clone)]
 pub struct ResourceIdentifier<'a>(Cow<'a, str>);
 
@@ -275,19 +275,19 @@ impl<'a> ResourceIdentifier<'a> {
     /// std::thread::spawn(move || println!("{}", ident));
     /// ```
     ///
-    /// Calling [`to_owned()`][Self::to_owned] on the identifier allows it to be
-    /// sent to the thread:
+    /// Calling [`into_owned()`][Self::into_owned] on the identifier allows it
+    /// to be sent to the thread:
     ///
     /// ```
     /// # use minecraft_assets::api::*;
     /// let string = String::from("my:ident");
     ///
     /// let ident = ResourceIdentifier::from(&string);
-    /// let ident = ident.to_owned();
+    /// let ident = ident.into_owned();
     ///
     /// std::thread::spawn(move || println!("{}", ident));
     /// ```
-    pub fn to_owned(&self) -> ResourceIdentifier<'static> {
+    pub fn into_owned(&self) -> ResourceIdentifier<'static> {
         let string = self.0.deref().to_owned();
         ResourceIdentifier(Cow::Owned(string))
     }
