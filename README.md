@@ -3,7 +3,8 @@
 [![Crates.io](https://img.shields.io/crates/v/minecraft-assets.svg)](https://crates.io/crates/minecraft-assets)
 [![Docs.rs](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/minecraft-assets)
 
-A library for reading Minecraft asset files and resource packs in Rust.
+A Rust library for reading asset files and resource packs for any version of
+Minecraft.
 
 ## Example
 
@@ -24,8 +25,38 @@ assert_eq!(model_properties.model, "block/oak_planks");
 
 ## Documentation
 
+This library is `#![warn(missing_docs)]`, so the documentation is very complete:
+
 * [Main Branch (github.io)](https://bgr360.github.io/minecraft-assets-rs/minecraft_assets/)
 * [Latest Release (docs.rs)](https://docs.rs/minecraft-assets)
+
+## Feature checklist
+
+#### Assets parsing
+
+[x] `assets/<namespace>/blockstates/*.json`
+[ ] `assets/<namespace>/font/*.json`
+[ ] `assets/<namespace>/lang/*.json`
+[x] `assets/<namespace>/models/block/*.json`
+[x] `assets/<namespace>/models/item/*.json`
+[ ] `assets/<namespace>/particles/*.json`
+[ ] `assets/<namespace>/shaders/{post,program}/*.json`
+[ ] `assets/<namespace>/textures/*.mcmeta`
+[ ] `assets/<namespace>/sounds.json`
+[ ] `assets/pack.mcmeta`
+
+#### Data parsing
+
+[ ] `data/<namespace>/advancements/**/*.json`
+[ ] `data/<namespace>/loot_tables/**/*.json`
+[ ] `data/<namespace>/recipes/*.json`
+[ ] `data/<namespace>/structures/**/*.json`
+[ ] `data/<namespace>/tags/**/*.json`
+
+## Projects using `minecraft-assets`
+
+* [Brine]: A multi-version Minecraft client written using Bevy.
+* *Maybe your project here! :)*
 
 ## Tests
 
@@ -49,6 +80,7 @@ $ cargo test --features tests
 ```
 
 [`minecraft-assets`]: https://github.com/InventivetalentDev
+[Brine]: https://github.com/BGR360/brine
 
 ## License
 
