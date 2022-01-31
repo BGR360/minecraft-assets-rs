@@ -2,6 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/minecraft-assets.svg)](https://crates.io/crates/minecraft-assets)
 [![Docs.rs](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/minecraft-assets)
+[![Tests](https://github.com/bgr360/minecraft-assets-rs/actions/workflows/tests.yml/badge.svg)](https://github.com/bgr360/minecraft-assets-rs/actions/workflows/tests.yml)
 
 A Rust library for reading asset files and resource packs for any version of
 Minecraft.
@@ -34,24 +35,24 @@ This library is `#![warn(missing_docs)]`, so the documentation is very complete:
 
 #### Assets parsing
 
-[x] `assets/<namespace>/blockstates/*.json`
-[ ] `assets/<namespace>/font/*.json`
-[ ] `assets/<namespace>/lang/*.json`
-[x] `assets/<namespace>/models/block/*.json`
-[x] `assets/<namespace>/models/item/*.json`
-[ ] `assets/<namespace>/particles/*.json`
-[ ] `assets/<namespace>/shaders/{post,program}/*.json`
-[ ] `assets/<namespace>/textures/*.mcmeta`
-[ ] `assets/<namespace>/sounds.json`
-[ ] `assets/pack.mcmeta`
+- [x] `assets/<namespace>/blockstates/*.json`
+- [ ] `assets/<namespace>/font/*.json`
+- [ ] `assets/<namespace>/lang/*.json`
+- [x] `assets/<namespace>/models/block/*.json`
+- [x] `assets/<namespace>/models/item/*.json`
+- [ ] `assets/<namespace>/particles/*.json`
+- [ ] `assets/<namespace>/shaders/{post,program}/*.json`
+- [ ] `assets/<namespace>/textures/*.mcmeta`
+- [ ] `assets/<namespace>/sounds.json`
+- [ ] `assets/pack.mcmeta`
 
 #### Data parsing
 
-[ ] `data/<namespace>/advancements/**/*.json`
-[ ] `data/<namespace>/loot_tables/**/*.json`
-[ ] `data/<namespace>/recipes/*.json`
-[ ] `data/<namespace>/structures/**/*.json`
-[ ] `data/<namespace>/tags/**/*.json`
+- [ ] `data/<namespace>/advancements/**/*.json`
+- [ ] `data/<namespace>/loot_tables/**/*.json`
+- [ ] `data/<namespace>/recipes/*.json`
+- [ ] `data/<namespace>/structures/**/*.json`
+- [ ] `data/<namespace>/tags/**/*.json`
 
 ## Projects using `minecraft-assets`
 
