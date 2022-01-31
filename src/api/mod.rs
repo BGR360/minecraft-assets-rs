@@ -6,7 +6,7 @@ mod asset_pack;
 mod resource_location;
 
 pub use asset_pack::AssetPack;
-pub use resource_location::{ResourceIdentifier, ResourceLocation};
+pub use resource_location::{ModelIdentifier, ResourceIdentifier, ResourceLocation};
 
 /// Error types that can be returned from API methods.
 #[derive(Debug, thiserror::Error)]
