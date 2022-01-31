@@ -113,12 +113,12 @@ impl AssetPack {
     /// ```no_run
     /// # use minecraft_assets::api::*;
     /// # let assets = AssetPack::at_path("foo");
-    /// let models = assets.load_block_model_recursive("cube_all").unwrap();
+    /// let models = assets.load_block_model_recursive("block/cube_all").unwrap();
     ///
     /// let expected = vec![
-    ///     assets.load_block_model("cube_all").unwrap(),
-    ///     assets.load_block_model("cube").unwrap(),
-    ///     assets.load_block_model("block").unwrap(),
+    ///     assets.load_block_model("block/cube_all").unwrap(),
+    ///     assets.load_block_model("block/cube").unwrap(),
+    ///     assets.load_block_model("block/block").unwrap(),
     /// ];
     /// assert_eq!(models, expected);
     /// ```
@@ -136,11 +136,39 @@ impl AssetPack {
     /// ```no_run
     /// # use minecraft_assets::api::*;
     /// # let assets = AssetPack::at_path("foo");
-    /// let model = assets.load_block_model("compass");
-    /// let model = assets.load_block_model("item/diamond_hoe");
+    /// let model = assets.load_item_model("compass");
+    /// let model = assets.load_item_model("item/diamond_hoe");
     /// ```
     pub fn load_item_model<'a>(&self, model: impl Into<ModelIdentifier<'a>>) -> Result<Model> {
         self.load_resource(&ResourceLocation::ItemModel(model.into()))
+    }
+
+    /// Loads the item [`Model`] identified by the given name or path, as well
+    /// as all of its parents and ancestors.
+    ///
+    /// The models are returned as a list, with the first element being the
+    /// model that was originally requested, the next element being its parent,
+    /// and so on with the last element being the topmost parent.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use minecraft_assets::api::*;
+    /// # let assets = AssetPack::at_path("foo");
+    /// let models = assets.load_item_model_recursive("item/diamond_hoe").unwrap();
+    ///
+    /// let expected = vec![
+    ///     assets.load_item_model("item/diamond_hoe").unwrap(),
+    ///     assets.load_item_model("item/handheld").unwrap(),
+    ///     assets.load_item_model("item/generated").unwrap(),
+    /// ];
+    /// assert_eq!(models, expected);
+    /// ```
+    pub fn load_item_model_recursive<'a>(
+        &self,
+        model: impl Into<ModelIdentifier<'a>>,
+    ) -> Result<Vec<Model>> {
+        self.load_model_recursive(&ResourceLocation::ItemModel(model.into()))
     }
 
     fn load_resource<T>(&self, resource: &ResourceLocation) -> Result<T>

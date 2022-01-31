@@ -1,5 +1,7 @@
 #![cfg(feature = "tests")]
 
+use assert_matches::assert_matches;
+
 use minecraft_assets::api::{AssetPack, ModelIdentifier};
 
 mod common;
@@ -33,6 +35,34 @@ fn load_block_model(assets: &AssetPack) {
         ModelIdentifier::from(&model.parent.unwrap()),
         ModelIdentifier::from("cube")
     );
+
+    // Item model should fail.
+    assert_matches!(assets.load_block_model("diamond_hoe"), Err(_));
+}
+
+fn load_item_model(assets: &AssetPack, version: &str) {
+    let expected_parent = if version == "1.8" {
+        "generated"
+    } else {
+        "handheld"
+    };
+
+    // Try it with both a prefixed and non-prefixed path (both should work on
+    // all versions).
+    let model = assets.load_item_model("diamond_hoe").unwrap();
+    assert_eq!(
+        ModelIdentifier::from(&model.parent.unwrap()),
+        ModelIdentifier::from(expected_parent)
+    );
+
+    let model = assets.load_item_model("item/diamond_hoe").unwrap();
+    assert_eq!(
+        ModelIdentifier::from(&model.parent.unwrap()),
+        ModelIdentifier::from(expected_parent)
+    );
+
+    // Block model should fail.
+    assert_matches!(assets.load_item_model("cube_all"), Err(_));
 }
 
 fn load_block_model_recursive(assets: &AssetPack, version: &str) {
@@ -54,6 +84,25 @@ fn load_block_model_recursive(assets: &AssetPack, version: &str) {
     assert_eq!(models, expected);
 }
 
+fn load_item_model_recursive(assets: &AssetPack, version: &str) {
+    let models = assets.load_item_model_recursive("diamond_hoe").unwrap();
+
+    let expected = if version == "1.8" {
+        vec![
+            assets.load_item_model("diamond_hoe").unwrap(),
+            assets.load_item_model("generated").unwrap(),
+        ]
+    } else {
+        vec![
+            assets.load_item_model("diamond_hoe").unwrap(),
+            assets.load_item_model("handheld").unwrap(),
+            assets.load_item_model("generated").unwrap(),
+        ]
+    };
+
+    assert_eq!(models, expected);
+}
+
 fn do_api_test(version: &str, flattening: Flattening) {
     let root =
         common::get_path_relative_to_manifest_dir(format!("tests/assets-{}", version)).unwrap();
@@ -61,6 +110,7 @@ fn do_api_test(version: &str, flattening: Flattening) {
 
     load_block_states(&assets, flattening);
     load_block_model(&assets);
+    load_item_model(&assets, version);
     load_block_model_recursive(&assets, version);
 }
 
