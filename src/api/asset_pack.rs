@@ -6,7 +6,9 @@ use std::{
 use serde::de::DeserializeOwned;
 
 use crate::{
-    api::{resource_location::ModelIdentifier, ResourceIdentifier, ResourceLocation, Result},
+    api::{
+        resource_location::ModelIdentifier, Error, ResourceIdentifier, ResourceLocation, Result,
+    },
     schemas::{BlockStates, Model},
 };
 
@@ -199,9 +201,10 @@ impl AssetPack {
     /// `assets/<namespace>/blockstates/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_blockstates<F>(&self, op: F) -> Result<()>
+    pub fn for_each_blockstates<F, E>(&self, op: F) -> Result<()>
     where
-        F: FnMut(&Path),
+        F: FnMut(&Path) -> Result<(), E>,
+        Error: From<E>,
     {
         self.for_each_file(&ResourceLocation::BlockStates("foo".into()), op)
     }
@@ -210,9 +213,10 @@ impl AssetPack {
     /// `assets/<namespace>/models/block/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_block_model<F>(&self, op: F) -> Result<()>
+    pub fn for_each_block_model<F, E>(&self, op: F) -> Result<()>
     where
-        F: FnMut(&Path),
+        F: FnMut(&Path) -> Result<(), E>,
+        Error: From<E>,
     {
         self.for_each_file(&ResourceLocation::BlockModel("foo".into()), op)
     }
@@ -221,9 +225,10 @@ impl AssetPack {
     /// `assets/<namespace>/models/item/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_item_model<F>(&self, op: F) -> Result<()>
+    pub fn for_each_item_model<F, E>(&self, op: F) -> Result<()>
     where
-        F: FnMut(&Path),
+        F: FnMut(&Path) -> Result<(), E>,
+        Error: From<E>,
     {
         self.for_each_file(&ResourceLocation::ItemModel("foo".into()), op)
     }
@@ -274,16 +279,17 @@ impl AssetPack {
         Ok(())
     }
 
-    fn for_each_file<F>(&self, resource: &ResourceLocation, mut op: F) -> Result<()>
+    fn for_each_file<F, E>(&self, resource: &ResourceLocation, mut op: F) -> Result<()>
     where
-        F: FnMut(&Path),
+        F: FnMut(&Path) -> Result<(), E>,
+        Error: From<E>,
     {
         let directory = self.get_resource_directory(resource);
 
         for entry in fs::read_dir(directory)? {
             let entry = entry?;
 
-            op(&entry.path())
+            op(&entry.path())?;
         }
 
         Ok(())

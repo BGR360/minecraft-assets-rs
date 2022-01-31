@@ -1,7 +1,7 @@
 #![cfg(feature = "tests")]
 
 use assert_matches::assert_matches;
-use std::path::PathBuf;
+use std::{io, path::PathBuf};
 
 use minecraft_assets::api::{AssetPack, ModelIdentifier};
 
@@ -160,7 +160,10 @@ fn for_each_blockstates() {
 
     let mut paths = Vec::new();
     assets
-        .for_each_blockstates(|path| paths.push(PathBuf::from(path)))
+        .for_each_blockstates(|path| -> Result<(), io::Error> {
+            paths.push(PathBuf::from(path));
+            Ok(())
+        })
         .unwrap();
 
     assert_eq!(paths.len(), 677);
@@ -172,7 +175,10 @@ fn for_each_block_model() {
 
     let mut paths = Vec::new();
     assets
-        .for_each_block_model(|path| paths.push(PathBuf::from(path)))
+        .for_each_block_model(|path| -> Result<(), io::Error> {
+            paths.push(PathBuf::from(path));
+            Ok(())
+        })
         .unwrap();
 
     assert_eq!(paths.len(), 1201);
@@ -184,8 +190,21 @@ fn for_each_item_model() {
 
     let mut paths = Vec::new();
     assets
-        .for_each_item_model(|path| paths.push(PathBuf::from(path)))
+        .for_each_item_model(|path| -> Result<(), io::Error> {
+            paths.push(PathBuf::from(path));
+            Ok(())
+        })
         .unwrap();
 
     assert_eq!(paths.len(), 1006);
+}
+
+#[test]
+fn for_each_blockstates_with_error() {
+    let assets = get_asset_pack("1.14");
+
+    assert_matches!(
+        assets.for_each_item_model(|_| Err(io::Error::new(io::ErrorKind::Other, ""))),
+        Err(_)
+    );
 }
