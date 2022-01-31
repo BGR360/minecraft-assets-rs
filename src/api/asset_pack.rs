@@ -6,8 +6,8 @@ use std::{
 use serde::de::DeserializeOwned;
 
 use crate::{
-    api::{ResourceIdentifier, ResourceLocation, Result},
-    schemas::blockstates::BlockStates,
+    api::{resource_location::ModelIdentifier, ResourceIdentifier, ResourceLocation, Result},
+    schemas::{BlockStates, Model},
 };
 
 /// A collection of Minecraft assets at a given file path.
@@ -85,6 +85,34 @@ impl AssetPack {
         block_id: impl Into<ResourceIdentifier<'a>>,
     ) -> Result<BlockStates> {
         self.load_resource(&ResourceLocation::BlockStates(block_id.into()))
+    }
+
+    /// Loads the block [`Model`] identified by the given name or path.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use minecraft_assets::api::*;
+    /// # let assets = AssetPack::at_path("foo");
+    /// let model = assets.load_block_model("stone");
+    /// let model = assets.load_block_model("block/dirt");
+    /// ```
+    pub fn load_block_model<'a>(&self, model: impl Into<ModelIdentifier<'a>>) -> Result<Model> {
+        self.load_resource(&ResourceLocation::BlockModel(model.into()))
+    }
+
+    /// Loads the item [`Model`] identified by the given name or path.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use minecraft_assets::api::*;
+    /// # let assets = AssetPack::at_path("foo");
+    /// let model = assets.load_block_model("compass");
+    /// let model = assets.load_block_model("item/diamond_hoe");
+    /// ```
+    pub fn load_item_model<'a>(&self, model: impl Into<ModelIdentifier<'a>>) -> Result<Model> {
+        self.load_resource(&ResourceLocation::ItemModel(model.into()))
     }
 
     fn load_resource<T>(&self, resource: &ResourceLocation) -> Result<T>

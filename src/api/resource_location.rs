@@ -21,23 +21,32 @@ pub enum ResourceKind {
 /// [`ResourceIdentifier`] documentation.
 ///
 /// [resource location]: <https://minecraft.fandom.com/wiki/Resource_location>
+/// [`ResourceIdentifier`]: ResourceIdentifier#borrowing--ownership
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ResourceLocation<'a> {
     /// Represents the location of a file in `assets/<namespace>/blockstates/`.
     BlockStates(ResourceIdentifier<'a>),
+
+    /// Represents the location of a file in `assets/<namespace>/models/block/`.
+    BlockModel(ModelIdentifier<'a>),
+
+    /// Represents the location of a file in `assets/<namespace>/models/item/`.
+    ItemModel(ModelIdentifier<'a>),
 }
 
 impl<'a> ResourceLocation<'a> {
     /// Returns a reference to the underlying [`ResourceIdentifier`].
     pub(crate) fn id(&self) -> &ResourceIdentifier<'a> {
         match self {
-            Self::BlockStates(ref id) => id,
+            Self::BlockModel(id) | Self::ItemModel(id) => id.deref(),
+            Self::BlockStates(id) => id,
         }
     }
 
     /// Returns the type of resource that this location references.
     pub fn kind(&self) -> ResourceKind {
         match self {
-            Self::BlockStates(_) => ResourceKind::Assets,
+            Self::BlockStates(_) | Self::BlockModel(_) | Self::ItemModel(_) => ResourceKind::Assets,
         }
     }
 
@@ -46,9 +55,35 @@ impl<'a> ResourceLocation<'a> {
         self.id().namespace()
     }
 
-    /// Returns the name / terminating "path" of the resource referenced by this location.
+    /// Returns the name / terminating "path" of the resource referenced by this
+    /// location.
+    ///
+    /// For [`BlockModel`] or [`ItemModel`] variants, the name will **not**
+    /// include any leading prefix like `block/` or `item/`. See the
+    /// [`ModelIdentifier`] documentation for more information.
+    ///
+    /// [`BlockModel`]: Self::BlockModel
+    /// [`ItemModel`]: Self::ItemModel
     pub fn name(&self) -> &str {
-        self.id().path()
+        match self {
+            Self::BlockModel(id) | Self::ItemModel(id) => id.model_name(),
+            _ => self.id().path(),
+        }
+    }
+
+    /// Returns the name of the model specified by a [`BlockModel`] or
+    /// [`ItemModel`], or `None` if `self` is not one of those variants.
+    ///
+    /// See the [`ModelIdentifier`] documentation for more information.
+    ///
+    /// [`BlockModel`]: Self::BlockModel
+    /// [`ItemModel`]: Self::ItemModel
+    pub fn model_name(&self) -> Option<&str> {
+        match self {
+            Self::BlockModel(id) | Self::ItemModel(id) => Some(id.model_name()),
+
+            _ => None,
+        }
     }
 
     /// Returns the path relative to `{assets,data}/<namespace>/` at which the
@@ -56,13 +91,15 @@ impl<'a> ResourceLocation<'a> {
     pub fn directory(&self) -> &'static str {
         match self {
             Self::BlockStates(_) => "blockstates",
+            Self::BlockModel(_) => "models/block",
+            Self::ItemModel(_) => "models/item",
         }
     }
 
     /// Returns the file extension (e.g., `json`) used for this resource's file.
     pub fn extension(&self) -> &'static str {
         match self {
-            Self::BlockStates(_) => "json",
+            Self::BlockStates(_) | Self::BlockModel(_) | Self::ItemModel(_) => "json",
         }
     }
 
@@ -288,3 +325,82 @@ impl<'a> fmt::Display for ResourceIdentifier<'a> {
         write!(f, "{}", self.to_canonical().as_str())
     }
 }
+
+/// A namespaced identifier for a block or item model.
+///
+/// Prior to 1.13, model identifiers found in
+/// `assets/<namespace>/blockstates/*.json` did not include a prefix like
+/// `block/` or `ident/` to disambiguate between different types of models.
+///
+/// Because of this, the `minecraft-assets` API forces the user to always
+/// specify which type of model they are trying to load (note the existence of
+/// both [`BlockModel`] and [`ItemModel`] variants in [`ResourceLocation`]).
+/// This way, the API will work with versions prior to 1.13.
+///
+/// This struct exists mostly for internal convenience so we can scrap the
+/// leading `block/` or `item/` if it is included.
+///
+/// [`BlockModel`]: ResourceLocation::BlockModel
+/// [`ItemModel`]: ResourceLocation::ItemModel
+#[derive(Debug, Clone)]
+pub struct ModelIdentifier<'a>(ResourceIdentifier<'a>);
+
+impl<'a> ModelIdentifier<'a> {
+    /// Returns the name of the model, stripping the leading path component if
+    /// there is one.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::api::*;
+    /// let ident = ModelIdentifier::from("stone");
+    /// assert_eq!(ident.model_name(), "stone");
+    /// let ident = ModelIdentifier::from("foo:stone");
+    /// assert_eq!(ident.model_name(), "stone");
+    ///
+    /// let ident = ModelIdentifier::from("block/oak_planks");
+    /// assert_eq!(ident.model_name(), "oak_planks");
+    /// let ident = ModelIdentifier::from("foo:block/oak_planks");
+    /// assert_eq!(ident.model_name(), "oak_planks");
+    ///
+    /// let ident = ModelIdentifier::from("item/diamond_hoe");
+    /// assert_eq!(ident.model_name(), "diamond_hoe");
+    /// let ident = ModelIdentifier::from("foo:item/diamond_hoe");
+    /// assert_eq!(ident.model_name(), "diamond_hoe");
+    ///
+    /// ```
+    pub fn model_name(&self) -> &str {
+        self.slash_position()
+            .map(|index| &self.0.path()[index + 1..])
+            .unwrap_or_else(|| self.0.path())
+    }
+
+    fn slash_position(&self) -> Option<usize> {
+        self.0.path().chars().position(|c| c == '/')
+    }
+}
+
+impl<'a, S> From<S> for ModelIdentifier<'a>
+where
+    S: Into<ResourceIdentifier<'a>>,
+{
+    fn from(source: S) -> Self {
+        Self(source.into())
+    }
+}
+
+impl<'a> Deref for ModelIdentifier<'a> {
+    type Target = ResourceIdentifier<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> PartialEq for ModelIdentifier<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.model_name() == other.model_name()
+    }
+}
+
+impl<'a> Eq for ModelIdentifier<'a> {}

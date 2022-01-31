@@ -122,7 +122,16 @@ pub struct Model {
     /// Specifies the path to the model file of the block, in the form of a
     /// [resource location].
     ///
+    /// # Version note
+    ///
+    /// In version 1.13 and beyond, this path includes a prefix such as `block/`
+    /// or `item/` to disambiguate between different model types. Versions prior
+    /// to 1.13 do not include this.
+    ///
+    /// See the [`ModelIdentifier`] documentation for more information.
+    ///
     /// [resource location]: <https://minecraft.fandom.com/wiki/Model#File_path>
+    /// [`ModelIdentifier`]: crate::api::ModelIdentifier
     pub model: String,
 
     /// Rotation of the model on the x-axis in increments of 90 degrees.
