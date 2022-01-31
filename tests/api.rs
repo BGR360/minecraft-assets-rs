@@ -35,6 +35,25 @@ fn load_block_model(assets: &AssetPack) {
     );
 }
 
+fn load_block_model_recursive(assets: &AssetPack, version: &str) {
+    let models = assets.load_block_model_recursive("cube_all").unwrap();
+
+    let expected = if version == "1.8" {
+        vec![
+            assets.load_block_model("cube_all").unwrap(),
+            assets.load_block_model("cube").unwrap(),
+        ]
+    } else {
+        vec![
+            assets.load_block_model("cube_all").unwrap(),
+            assets.load_block_model("cube").unwrap(),
+            assets.load_block_model("block").unwrap(),
+        ]
+    };
+
+    assert_eq!(models, expected);
+}
+
 fn do_api_test(version: &str, flattening: Flattening) {
     let root =
         common::get_path_relative_to_manifest_dir(format!("tests/assets-{}", version)).unwrap();
@@ -42,6 +61,7 @@ fn do_api_test(version: &str, flattening: Flattening) {
 
     load_block_states(&assets, flattening);
     load_block_model(&assets);
+    load_block_model_recursive(&assets, version);
 }
 
 #[test]
