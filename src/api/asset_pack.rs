@@ -233,14 +233,33 @@ impl AssetPack {
         self.for_each_file(&ResourceLocation::ItemModel("foo".into()), op)
     }
 
+    /// Loads a given resource directly given the full path to its file.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use minecraft_assets::api::*;
+    /// # use minecraft_assets::schemas::BlockStates;
+    /// # let assets = AssetPack::at_path("foo");
+    /// let blockstates: BlockStates = assets.load_resource_at_path(
+    ///     "~/.minecraft/assets/minecraft/blockstates/stone.json"
+    /// ).unwrap();
+    /// ```
+    pub fn load_resource_at_path<T>(&self, path: impl AsRef<Path>) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
+        let file = fs::File::open(path)?;
+        let resource: T = serde_json::from_reader(file)?;
+        Ok(resource)
+    }
+
     fn load_resource<T>(&self, resource: &ResourceLocation) -> Result<T>
     where
         T: DeserializeOwned,
     {
         let path = self.get_resource_path(resource);
-        let file = fs::File::open(path)?;
-        let resource: T = serde_json::from_reader(file)?;
-        Ok(resource)
+        self.load_resource_at_path(path)
     }
 
     fn load_model_recursive(&self, resource: &ResourceLocation) -> Result<Vec<Model>> {
