@@ -90,10 +90,10 @@ impl Default for BlockStates {
 #[serde(untagged)]
 pub enum Variant {
     /// A variant with only a single model to choose from.
-    Single(Model),
+    Single(ModelProperties),
 
     /// A variant with multiple models to choose from.
-    Multiple(Vec<Model>),
+    Multiple(Vec<ModelProperties>),
 }
 
 impl Default for Variant {
@@ -103,11 +103,12 @@ impl Default for Variant {
 }
 
 impl Variant {
-    /// Returns all of the possible [`Model`]s for this variant as a slice.
+    /// Returns all of the possible [`ModelProperties`] choices for this variant
+    /// as a slice.
     ///
     /// The slice will contain one element for a [`Single`][Self::Single]
     /// variant, and multiple for a [`Multiple`][Self::Multiple] variant.
-    pub fn models(&self) -> &[Model] {
+    pub fn models(&self) -> &[ModelProperties] {
         match self {
             Self::Single(model) => std::slice::from_ref(model),
             Self::Multiple(models) => &models[..],
@@ -118,7 +119,7 @@ impl Variant {
 /// Contains the properties of a model that is used to render all or part of a
 /// block in a particular state.
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct Model {
+pub struct ModelProperties {
     /// Specifies the path to the model file of the block, in the form of a
     /// [resource location].
     ///
@@ -135,11 +136,11 @@ pub struct Model {
     pub model: String,
 
     /// Rotation of the model on the x-axis in increments of 90 degrees.
-    #[serde(default = "Model::default_rotation")]
+    #[serde(default = "ModelProperties::default_rotation")]
     pub x: i32,
 
     /// Rotation of the model on the y-axis in increments of 90 degrees.
-    #[serde(default = "Model::default_rotation")]
+    #[serde(default = "ModelProperties::default_rotation")]
     pub y: i32,
 
     /// Can be `true` or `false` (default). Locks the rotation of the texture of
@@ -149,7 +150,7 @@ pub struct Model {
     /// See the example on the [wiki page].
     ///
     /// [wiki page]: <https://minecraft.fandom.com/wiki/Model#Block_states>
-    #[serde(rename = "uvlock", default = "Model::default_uv_lock")]
+    #[serde(rename = "uvlock", default = "ModelProperties::default_uv_lock")]
     pub uv_lock: bool,
 
     /// Sets the probability of the model for being used in the game.
@@ -161,11 +162,11 @@ pub struct Model {
     /// weight would be 4 (1+1+2). The probability of each model being used
     /// would then be determined by dividing each weight by 4: 1/4, 1/4 and 2/4,
     /// or 25%, 25% and 50%, respectively.)
-    #[serde(default = "Model::default_weight")]
+    #[serde(default = "ModelProperties::default_weight")]
     pub weight: u32,
 }
 
-impl Model {
+impl ModelProperties {
     pub(crate) const fn default_rotation() -> i32 {
         0
     }
@@ -179,7 +180,7 @@ impl Model {
     }
 }
 
-impl Default for Model {
+impl Default for ModelProperties {
     fn default() -> Self {
         Self {
             model: Default::default(),

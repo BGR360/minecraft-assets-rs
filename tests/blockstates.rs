@@ -5,7 +5,7 @@ use maplit::hashmap;
 
 use minecraft_assets::schemas::blockstates::{
     multipart::{Case, Condition, WhenClause},
-    BlockStates, Model, Variant,
+    BlockStates, ModelProperties, Variant,
 };
 
 mod common;
@@ -33,7 +33,7 @@ fn do_single_variant_test(bytes: &[u8], version: Flattening) {
 
     let expected = BlockStates::Variants {
         variants: hashmap! {
-            variant_name => Variant::Single(Model {
+            variant_name => Variant::Single(ModelProperties {
                 model: model_path("oak_planks", version),
                 ..Default::default()
             })
@@ -107,20 +107,20 @@ fn do_single_variant_multiple_models_test(bytes: &[u8], version: Flattening) {
     let expected = BlockStates::Variants {
         variants: hashmap! {
             single_variant_name(version) => Variant::Multiple(vec![
-                Model {
+                ModelProperties {
                     model: model_path("stone", version),
                     ..Default::default()
                 },
-                Model {
+                ModelProperties {
                     model: model_path("stone_mirrored", version),
                     ..Default::default()
                 },
-                Model {
+                ModelProperties {
                     model: model_path("stone", version),
                     y: 180,
                     ..Default::default()
                 },
-                Model {
+                ModelProperties {
                     model: model_path("stone_mirrored", version),
                     y: 180,
                     ..Default::default()
@@ -197,12 +197,12 @@ fn multiple_variants() {
 
     let expected = BlockStates::Variants {
         variants: hashmap! {
-            String::from("powered=false") => Variant::Single(Model {
+            String::from("powered=false") => Variant::Single(ModelProperties {
                 model: String::from("block/stone_pressure_plate"),
                 ..Default::default()
             }),
 
-            String::from("powered=true") => Variant::Single(Model {
+            String::from("powered=true") => Variant::Single(ModelProperties {
                 model: String::from("block/stone_pressure_plate_down"),
                 ..Default::default()
             })
@@ -219,14 +219,14 @@ fn do_multipart_test(bytes: &[u8], version: Flattening) {
         multipart: vec![
             Case {
                 when: Some(WhenClause::Single(condition! { "up" => "true" })),
-                apply: Variant::Single(Model {
+                apply: Variant::Single(ModelProperties {
                     model: model_path("cobblestone_wall_post", version),
                     ..Default::default()
                 }),
             },
             Case {
                 when: Some(WhenClause::Single(condition! { "north" => "true" })),
-                apply: Variant::Single(Model {
+                apply: Variant::Single(ModelProperties {
                     model: model_path("cobblestone_wall_side", version),
                     uv_lock: true,
                     ..Default::default()
@@ -234,7 +234,7 @@ fn do_multipart_test(bytes: &[u8], version: Flattening) {
             },
             Case {
                 when: Some(WhenClause::Single(condition! { "east" => "true" })),
-                apply: Variant::Single(Model {
+                apply: Variant::Single(ModelProperties {
                     model: model_path("cobblestone_wall_side", version),
                     uv_lock: true,
                     y: 90,
@@ -243,7 +243,7 @@ fn do_multipart_test(bytes: &[u8], version: Flattening) {
             },
             Case {
                 when: Some(WhenClause::Single(condition! { "south" => "true" })),
-                apply: Variant::Single(Model {
+                apply: Variant::Single(ModelProperties {
                     model: model_path("cobblestone_wall_side", version),
                     uv_lock: true,
                     y: 180,
@@ -252,7 +252,7 @@ fn do_multipart_test(bytes: &[u8], version: Flattening) {
             },
             Case {
                 when: Some(WhenClause::Single(condition! { "west" => "true" })),
-                apply: Variant::Single(Model {
+                apply: Variant::Single(ModelProperties {
                     model: model_path("cobblestone_wall_side", version),
                     uv_lock: true,
                     y: 270,
@@ -335,7 +335,7 @@ fn multipart_with_or() {
                 condition! {"west" => "side|up", "north" => "side|up"},
             ],
         }),
-        apply: Variant::Single(Model {
+        apply: Variant::Single(ModelProperties {
             model: String::from("block/redstone_dust_dot"),
             ..Default::default()
         }),
@@ -360,7 +360,7 @@ fn multipart_with_boolean_values() {
 
     let expected_case = Case {
         when: Some(WhenClause::Single(condition! { "up" => true })),
-        apply: Variant::Single(Model {
+        apply: Variant::Single(ModelProperties {
             model: String::from("block/mossy_cobblestone_wall_post"),
             ..Default::default()
         }),
