@@ -3,3 +3,6 @@
 
 pub mod blockstates;
 pub mod models;
+
+pub use blockstates::BlockStates;
+pub use models::Model;

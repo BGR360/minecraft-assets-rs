@@ -47,6 +47,32 @@ pub enum BlockStates {
     },
 }
 
+impl BlockStates {
+    /// Returns the mapping from block states to [`Variant`]s, or `None` if the
+    /// block states are specified as [`Multipart`].
+    ///
+    /// [`Multipart`]: Self::Multipart
+    pub fn variants(&self) -> Option<&HashMap<String, Variant>> {
+        match self {
+            Self::Variants { ref variants } => Some(variants),
+            Self::Multipart { .. } => None,
+        }
+    }
+
+    /// Returns the list of [`Case`]s that specify how to display the different
+    /// [`Variant`]s, or `None` if the block states are specified as
+    /// [`Variants`].
+    ///
+    /// [`Case`]: multipart::Case
+    /// [`Variants`]: Self::Variants
+    pub fn cases(&self) -> Option<&[multipart::Case]> {
+        match self {
+            Self::Variants { .. } => None,
+            Self::Multipart { multipart } => Some(&multipart[..]),
+        }
+    }
+}
+
 impl Default for BlockStates {
     fn default() -> Self {
         Self::Variants {
