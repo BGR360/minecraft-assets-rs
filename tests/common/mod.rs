@@ -30,3 +30,27 @@ pub fn parse_all_in_dir<T: for<'de> Deserialize<'de>>(path: &str) {
         serde_json::from_reader::<_, T>(file).unwrap();
     }
 }
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[allow(non_camel_case_types)]
+pub enum Flattening {
+    Pre,
+    Post,
+}
+
+// Prior to 1.13, single-variant blockstates had "normal" as their
+// variant name. In versions >= 1.13, the variant name is ""
+pub fn single_variant_name(version: Flattening) -> String {
+    match version {
+        Flattening::Pre => String::from("normal"),
+        Flattening::Post => String::from(""),
+    }
+}
+
+// In versions >= 1.13, model paths are prefixed with "block/".
+pub fn model_path(model: &str, version: Flattening) -> String {
+    match version {
+        Flattening::Pre => String::from(model),
+        Flattening::Post => format!("block/{}", model),
+    }
+}
