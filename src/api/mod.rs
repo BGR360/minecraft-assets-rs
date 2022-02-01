@@ -5,9 +5,11 @@
 use std::io;
 
 mod asset_pack;
+mod resolve;
 mod resource_location;
 
 pub use asset_pack::AssetPack;
+pub use resolve::ModelResolver;
 pub use resource_location::{ModelIdentifier, ResourceIdentifier, ResourceLocation};
 
 /// Error types that can be returned from API methods.

@@ -5,7 +5,11 @@
 //!
 //! See <https://minecraft.fandom.com/wiki/Model#Block_models>.
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    hash::Hash,
+    ops::{Deref, DerefMut},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -209,14 +213,110 @@ pub struct Textures {
     pub variables: HashMap<String, Texture>,
 }
 
+impl Textures {
+    /// Attempts to resolve each of the texture variables in `self` using the
+    /// values present in `other`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::models::*;
+    /// use maplit::hashmap;
+    ///
+    /// let mut textures = Textures::from(hashmap! {
+    ///     "foo" => "#foobar",
+    ///     "bar" => "#barvar"
+    /// });
+    ///
+    /// textures.resolve(&Textures::from(hashmap! {
+    ///     "barvar" => "herobrine",
+    /// }));
+    ///
+    /// let expected = Textures::from(hashmap! {
+    ///     "foo" => "#foobar",
+    ///     "bar" => "herobrine",
+    /// });
+    ///
+    /// assert_eq!(textures, expected);
+    /// ```
+    pub fn resolve(&mut self, other: &Self) {
+        for texture in self.values_mut() {
+            if let Some(substitution) = texture.resolve(other) {
+                *texture = Texture::from(substitution);
+            }
+        }
+    }
+
+    /// Merges the values from `other` into `self`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::models::*;
+    /// use maplit::hashmap;
+    ///
+    /// let mut textures = Textures::from(hashmap! {
+    ///     "foo" => "#foobar",
+    ///     "bar" => "#barvar"
+    /// });
+    ///
+    /// textures.merge(Textures::from(hashmap! {
+    ///     "foo" => "fooey",
+    ///     "creeper" => "aw man"
+    /// }));
+    ///
+    /// let expected = Textures::from(hashmap! {
+    ///     "foo" => "fooey",
+    ///     "creeper" => "aw man",
+    ///     "bar" => "#barvar"
+    /// });
+    ///
+    /// assert_eq!(textures, expected);
+    /// ```
+    pub fn merge(&mut self, other: Self) {
+        for (name, texture) in other.variables.into_iter() {
+            println!("inserting: {:?}", (&name, &texture));
+            self.insert(name, texture);
+        }
+    }
+}
+
+impl<K, V> From<HashMap<K, V>> for Textures
+where
+    K: Into<String>,
+    V: Into<Texture>,
+{
+    fn from(source: HashMap<K, V>) -> Self {
+        let variables = source
+            .into_iter()
+            .map(|(k, v)| (k.into(), v.into()))
+            .collect();
+        Self { variables }
+    }
+}
+
+impl Deref for Textures {
+    type Target = HashMap<String, Texture>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.variables
+    }
+}
+
+impl DerefMut for Textures {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.variables
+    }
+}
+
 /// The value of a [texture variable] in the [`Textures`] map.
 ///
 /// The string value will either specify a [`location`] to load the texture from
-/// or another texture [`variable`] to take its value from.
+/// or a [`reference`] to another texture variable to take its value from.
 ///
-/// [texture variable]: Texture#texture-variables
+/// [texture variable]: Textures#texture-variables
 /// [`location`]: Self::location
-/// [`variable`]: Self::variable
+/// [`reference`]: Self::reference
 #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct Texture(pub String);
 
@@ -225,6 +325,16 @@ impl Texture {
     /// should instead take on the value of another texture variable.
     ///
     /// [resource location]: <https://minecraft.fandom.com/wiki/Model#File_path>
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::models::*;
+    /// let texture = Texture::from("texture/location");
+    /// assert_eq!(texture.location(), Some("texture/location"));
+    ///
+    /// let texture = Texture::from("#another_var");
+    /// assert_eq!(texture.location(), None);
     pub fn location(&self) -> Option<&str> {
         if self.0.starts_with('#') {
             None
@@ -236,12 +346,60 @@ impl Texture {
     /// Returns the name of the texture variable from which this texture should
     /// get its value, or `None` if the texture should be loaded from a
     /// resource.
-    pub fn variable(&self) -> Option<&str> {
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::models::*;
+    /// let texture = Texture::from("texture/location");
+    /// assert_eq!(texture.reference(), None);
+    ///
+    /// let texture = Texture::from("#another_var");
+    /// assert_eq!(texture.reference(), Some("another_var"));
+    /// ```
+    pub fn reference(&self) -> Option<&str> {
         if self.0.starts_with('#') {
             Some(&self.0[1..])
         } else {
             None
         }
+    }
+
+    /// Resolves this texture value using the variables present in `other`, or
+    /// returns `None` if:
+    /// * This texture value not reference another texture variable, or
+    /// * There is no variable in `other` that matches
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::models::*;
+    /// use maplit::hashmap;
+    ///
+    /// let substitutions = Textures::from(hashmap! {
+    ///     "foo" => "textures/foo",
+    ///     "bar" => "#another_var",
+    /// });
+    ///
+    /// let texture = Texture::from("#foo");
+    /// assert_eq!(texture.resolve(&substitutions), Some("textures/foo"));
+    ///
+    /// let texture = Texture::from("#bar");
+    /// assert_eq!(texture.resolve(&substitutions), Some("#another_var"));
+    ///
+    /// let texture = Texture::from("#not_found");
+    /// assert_eq!(texture.resolve(&substitutions), None);
+    ///
+    /// let texture = Texture::from("not_a_reference");
+    /// assert_eq!(texture.resolve(&substitutions), None);
+    /// ```
+    pub fn resolve<'a>(&'a self, substitutions: &'a Textures) -> Option<&'a str> {
+        if let Some(reference) = self.reference() {
+            if let Some(substitution) = substitutions.get(reference) {
+                return Some(&substitution.0);
+            }
+        }
+        None
     }
 }
 
@@ -356,7 +514,7 @@ pub struct ElementFace {
 
     /// Specifies the texture as [texture variable] prepended with a `#`.
     ///
-    /// [texture variable]: Texture#texture-variables
+    /// [texture variable]: Textures#texture-variables
     pub texture: Texture,
 
     /// Specifies whether a face does not need to be rendered when there is a
