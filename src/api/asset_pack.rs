@@ -319,6 +319,12 @@ impl AssetPack {
         for entry in fs::read_dir(directory)? {
             let entry = entry?;
 
+            let path = entry.path();
+
+            if path.file_name().unwrap().to_string_lossy().starts_with('_') {
+                continue;
+            }
+
             op(&entry.path())?;
         }
 

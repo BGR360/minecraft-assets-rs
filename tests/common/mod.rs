@@ -24,6 +24,10 @@ pub fn parse_all_in_dir<T: for<'de> Deserialize<'de>>(path: &str) {
 
         let path = entry.path();
 
+        if path.file_name().unwrap().to_string_lossy().starts_with('_') {
+            continue;
+        }
+
         println!("Parsing {}", path.to_string_lossy());
 
         let file = fs::File::open(path).unwrap();
@@ -33,24 +37,26 @@ pub fn parse_all_in_dir<T: for<'de> Deserialize<'de>>(path: &str) {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
-pub enum Flattening {
-    Pre,
-    Post,
+pub enum Versions {
+    PreFlattening,
+    PostFlattening,
+    Post_1_16_2,
 }
 
 // Prior to 1.13, single-variant blockstates had "normal" as their
 // variant name. In versions >= 1.13, the variant name is ""
-pub fn single_variant_name(version: Flattening) -> String {
+pub fn single_variant_name(version: Versions) -> String {
     match version {
-        Flattening::Pre => String::from("normal"),
-        Flattening::Post => String::from(""),
+        Versions::PreFlattening => String::from("normal"),
+        Versions::PostFlattening | Versions::Post_1_16_2 => String::from(""),
     }
 }
 
 // In versions >= 1.13, model paths are prefixed with "block/".
-pub fn model_path(model: &str, version: Flattening) -> String {
+pub fn model_path(model: &str, version: Versions) -> String {
     match version {
-        Flattening::Pre => String::from(model),
-        Flattening::Post => format!("block/{}", model),
+        Versions::PreFlattening => String::from(model),
+        Versions::PostFlattening => format!("block/{}", model),
+        Versions::Post_1_16_2 => format!("minecraft:block/{}", model),
     }
 }

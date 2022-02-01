@@ -7,9 +7,9 @@ use minecraft_assets::api::{AssetPack, ModelIdentifier};
 
 mod common;
 
-use common::{single_variant_name, Flattening};
+use common::{single_variant_name, Versions};
 
-fn load_block_states(assets: &AssetPack, flattening: Flattening) {
+fn load_block_states(assets: &AssetPack, flattening: Versions) {
     let states = assets.load_blockstates("oak_planks").unwrap();
     let variants = states.variants().unwrap();
 
@@ -105,7 +105,7 @@ fn load_item_model_recursive(assets: &AssetPack, version: &str) {
     assert_eq!(models, expected);
 }
 
-fn do_api_test(version: &str, flattening: Flattening) {
+fn do_api_test(version: &str, flattening: Versions) {
     let assets = get_asset_pack(version);
 
     load_block_states(&assets, flattening);
@@ -123,37 +123,52 @@ fn get_asset_pack(version: &str) -> AssetPack {
 
 #[test]
 fn api_1_8() {
-    do_api_test("1.8", Flattening::Pre);
+    do_api_test("1.8", Versions::PreFlattening);
 }
 
 #[test]
 fn api_1_9() {
-    do_api_test("1.9", Flattening::Pre);
+    do_api_test("1.9", Versions::PreFlattening);
 }
 
 #[test]
 fn api_1_11() {
-    do_api_test("1.11", Flattening::Pre);
+    do_api_test("1.11", Versions::PreFlattening);
 }
 
 #[test]
 fn api_1_12() {
-    do_api_test("1.12", Flattening::Pre);
+    do_api_test("1.12", Versions::PreFlattening);
 }
 
 #[test]
 fn api_1_13() {
-    do_api_test("1.13", Flattening::Post);
+    do_api_test("1.13", Versions::PostFlattening);
 }
 
 #[test]
 fn api_1_14() {
-    do_api_test("1.14", Flattening::Post);
+    do_api_test("1.14", Versions::PostFlattening);
 }
 
 #[test]
 fn api_1_15() {
-    do_api_test("1.15", Flattening::Post);
+    do_api_test("1.15", Versions::PostFlattening);
+}
+
+#[test]
+fn api_1_16_2() {
+    do_api_test("1.16.2", Versions::PostFlattening);
+}
+
+#[test]
+fn api_1_17() {
+    do_api_test("1.17", Versions::PostFlattening);
+}
+
+#[test]
+fn api_1_18() {
+    do_api_test("1.18", Versions::PostFlattening);
 }
 
 #[test]

@@ -10,7 +10,7 @@ use minecraft_assets::schemas::blockstates::{
 
 mod common;
 
-use common::{model_path, parse_all_in_dir, single_variant_name, Flattening};
+use common::{model_path, parse_all_in_dir, single_variant_name, Versions};
 
 macro_rules! condition {
     (
@@ -28,7 +28,7 @@ macro_rules! condition {
     }
 }
 
-fn do_single_variant_test(bytes: &[u8], version: Flattening) {
+fn do_single_variant_test(bytes: &[u8], version: Versions) {
     let variant_name = single_variant_name(version);
 
     let expected = BlockStates::Variants {
@@ -49,7 +49,7 @@ fn do_single_variant_test(bytes: &[u8], version: Flattening) {
 fn single_variant_1_8() {
     do_single_variant_test(
         include_bytes!("./assets-1.8/assets/minecraft/blockstates/oak_planks.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -57,7 +57,7 @@ fn single_variant_1_8() {
 fn single_variant_1_9() {
     do_single_variant_test(
         include_bytes!("./assets-1.9/assets/minecraft/blockstates/oak_planks.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -65,7 +65,7 @@ fn single_variant_1_9() {
 fn single_variant_1_11() {
     do_single_variant_test(
         include_bytes!("./assets-1.11/assets/minecraft/blockstates/oak_planks.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -73,7 +73,7 @@ fn single_variant_1_11() {
 fn single_variant_1_12() {
     do_single_variant_test(
         include_bytes!("./assets-1.12/assets/minecraft/blockstates/oak_planks.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -81,7 +81,7 @@ fn single_variant_1_12() {
 fn single_variant_1_13() {
     do_single_variant_test(
         include_bytes!("./assets-1.13/assets/minecraft/blockstates/oak_planks.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
 
@@ -89,7 +89,7 @@ fn single_variant_1_13() {
 fn single_variant_1_14() {
     do_single_variant_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/oak_planks.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
 
@@ -97,11 +97,35 @@ fn single_variant_1_14() {
 fn single_variant_1_15() {
     do_single_variant_test(
         include_bytes!("./assets-1.15/assets/minecraft/blockstates/oak_planks.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
 
-fn do_single_variant_multiple_models_test(bytes: &[u8], version: Flattening) {
+#[test]
+fn single_variant_1_16_2() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.16.2/assets/minecraft/blockstates/oak_planks.json"),
+        Versions::Post_1_16_2,
+    );
+}
+
+#[test]
+fn single_variant_1_17() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.17/assets/minecraft/blockstates/oak_planks.json"),
+        Versions::Post_1_16_2,
+    );
+}
+
+#[test]
+fn single_variant_1_18() {
+    do_single_variant_test(
+        include_bytes!("./assets-1.18/assets/minecraft/blockstates/oak_planks.json"),
+        Versions::Post_1_16_2,
+    );
+}
+
+fn do_single_variant_multiple_models_test(bytes: &[u8], version: Versions) {
     let actual: BlockStates = serde_json::from_slice(bytes).unwrap();
 
     let expected = BlockStates::Variants {
@@ -136,7 +160,7 @@ fn do_single_variant_multiple_models_test(bytes: &[u8], version: Flattening) {
 fn single_variant_multiple_models_1_8() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.8/assets/minecraft/blockstates/stone.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -144,7 +168,7 @@ fn single_variant_multiple_models_1_8() {
 fn single_variant_multiple_models_1_9() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.9/assets/minecraft/blockstates/stone.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -152,7 +176,7 @@ fn single_variant_multiple_models_1_9() {
 fn single_variant_multiple_models_1_11() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.11/assets/minecraft/blockstates/stone.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -160,7 +184,7 @@ fn single_variant_multiple_models_1_11() {
 fn single_variant_multiple_models_1_12() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.12/assets/minecraft/blockstates/stone.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -168,7 +192,7 @@ fn single_variant_multiple_models_1_12() {
 fn single_variant_multiple_models_1_13() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.13/assets/minecraft/blockstates/stone.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
 
@@ -176,7 +200,7 @@ fn single_variant_multiple_models_1_13() {
 fn single_variant_multiple_models_1_14() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/stone.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
 
@@ -184,7 +208,31 @@ fn single_variant_multiple_models_1_14() {
 fn single_variant_multiple_models_1_15() {
     do_single_variant_multiple_models_test(
         include_bytes!("./assets-1.15/assets/minecraft/blockstates/stone.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
+    );
+}
+
+#[test]
+fn single_variant_multiple_models_1_16_2() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.16.2/assets/minecraft/blockstates/stone.json"),
+        Versions::Post_1_16_2,
+    );
+}
+
+#[test]
+fn single_variant_multiple_models_1_17() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.17/assets/minecraft/blockstates/stone.json"),
+        Versions::Post_1_16_2,
+    );
+}
+
+#[test]
+fn single_variant_multiple_models_1_18() {
+    do_single_variant_multiple_models_test(
+        include_bytes!("./assets-1.18/assets/minecraft/blockstates/stone.json"),
+        Versions::Post_1_16_2,
     );
 }
 
@@ -212,7 +260,7 @@ fn multiple_variants() {
     assert_eq!(actual, expected);
 }
 
-fn do_multipart_test(bytes: &[u8], version: Flattening) {
+fn do_multipart_test(bytes: &[u8], version: Versions) {
     let actual: BlockStates = serde_json::from_slice(bytes).unwrap();
 
     let expected = BlockStates::Multipart {
@@ -269,7 +317,7 @@ fn do_multipart_test(bytes: &[u8], version: Flattening) {
 fn multipart_1_9() {
     do_multipart_test(
         include_bytes!("./assets-1.9/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -277,7 +325,7 @@ fn multipart_1_9() {
 fn multipart_1_11() {
     do_multipart_test(
         include_bytes!("./assets-1.11/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -285,7 +333,7 @@ fn multipart_1_11() {
 fn multipart_1_12() {
     do_multipart_test(
         include_bytes!("./assets-1.12/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Flattening::Pre,
+        Versions::PreFlattening,
     );
 }
 
@@ -293,7 +341,7 @@ fn multipart_1_12() {
 fn multipart_1_13() {
     do_multipart_test(
         include_bytes!("./assets-1.13/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
 
@@ -301,7 +349,7 @@ fn multipart_1_13() {
 fn multipart_1_14() {
     do_multipart_test(
         include_bytes!("./assets-1.14/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
 
@@ -309,9 +357,35 @@ fn multipart_1_14() {
 fn multipart_1_15() {
     do_multipart_test(
         include_bytes!("./assets-1.15/assets/minecraft/blockstates/cobblestone_wall.json"),
-        Flattening::Post,
+        Versions::PostFlattening,
     );
 }
+
+/*
+#[test]
+fn multipart_1_16_2() {
+    do_multipart_test(
+        include_bytes!("./assets-1.16.2/assets/minecraft/blockstates/cobblestone_wall.json"),
+        Versions::Post_1_16_2,
+    );
+}
+
+#[test]
+fn multipart_1_17() {
+    do_multipart_test(
+        include_bytes!("./assets-1.17/assets/minecraft/blockstates/cobblestone_wall.json"),
+        Versions::Post_1_16_2,
+    );
+}
+
+#[test]
+fn multipart_1_18() {
+    do_multipart_test(
+        include_bytes!("./assets-1.18/assets/minecraft/blockstates/cobblestone_wall.json"),
+        Versions::Post_1_16_2,
+    );
+}
+*/
 
 #[test]
 fn multipart_with_or() {
@@ -414,4 +488,19 @@ fn can_parse_all_blockstates_1_14() {
 #[test]
 fn can_parse_all_blockstates_1_15() {
     parse_all_blockstates_in_version("1.15");
+}
+
+#[test]
+fn can_parse_all_blockstates_1_16_2() {
+    parse_all_blockstates_in_version("1.16.2");
+}
+
+#[test]
+fn can_parse_all_blockstates_1_17() {
+    parse_all_blockstates_in_version("1.17");
+}
+
+#[test]
+fn can_parse_all_blockstates_1_18() {
+    parse_all_blockstates_in_version("1.18");
 }

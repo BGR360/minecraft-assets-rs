@@ -122,3 +122,18 @@ fn can_parse_all_models_1_14() {
 fn can_parse_all_models_1_15() {
     parse_all_models_in_version("1.15");
 }
+
+#[test]
+fn can_parse_all_models_1_16_2() {
+    parse_all_models_in_version("1.16.2");
+}
+
+#[test]
+fn can_parse_all_models_1_17() {
+    parse_all_models_in_version("1.17");
+}
+
+#[test]
+fn can_parse_all_models_1_18() {
+    parse_all_models_in_version("1.18");
+}
