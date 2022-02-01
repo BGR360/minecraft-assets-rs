@@ -7,8 +7,7 @@ use serde::de::DeserializeOwned;
 
 use crate::{
     api::{
-        resource_location::ModelIdentifier, Error, ModelResolver, ResourceIdentifier,
-        ResourceLocation, Result,
+        resource_location::ModelIdentifier, Error, ResourceIdentifier, ResourceLocation, Result,
     },
     schemas::{BlockStates, Model},
 };
@@ -266,13 +265,48 @@ impl AssetPack {
     fn load_model_recursive(&self, resource: &ResourceLocation) -> Result<Vec<Model>> {
         let mut models = Vec::new();
 
-        ModelResolver::for_each_parent(
+        Self::for_each_parent(
             resource.clone(),
             |model| models.push(model),
             |next_location| self.load_resource(next_location),
         )?;
 
         Ok(models)
+    }
+
+    pub(crate) fn for_each_parent<F, L, E>(
+        mut current: ResourceLocation,
+        mut op: F,
+        mut load_model: L,
+    ) -> Result<(), E>
+    where
+        F: FnMut(Model),
+        L: FnMut(&ResourceLocation) -> Result<Model, E>,
+    {
+        loop {
+            let model = load_model(&current)?;
+
+            let parent_owned = model
+                .parent
+                .as_ref()
+                .map(|parent| ModelIdentifier::from(ResourceIdentifier::from(parent).into_owned()));
+
+            op(model);
+
+            match parent_owned {
+                Some(parent) if !parent.is_builtin() => {
+                    println!("{}", parent.as_str());
+                    current = match current {
+                        ResourceLocation::BlockModel(_) => ResourceLocation::BlockModel(parent),
+                        ResourceLocation::ItemModel(_) => ResourceLocation::ItemModel(parent),
+                        _ => unreachable!(),
+                    };
+                }
+                _ => break,
+            }
+        }
+
+        Ok(())
     }
 
     fn for_each_file<F, E>(&self, resource: &ResourceLocation, mut op: F) -> Result<()>
