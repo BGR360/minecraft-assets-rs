@@ -32,6 +32,9 @@ pub enum ResourceLocation<'a> {
 
     /// Represents the location of a file in `assets/<namespace>/models/item/`.
     ItemModel(ModelIdentifier<'a>),
+
+    /// Represents the location of a file in `assets/<namespace>/textures/`.
+    Texture(ResourceIdentifier<'a>),
 }
 
 impl<'a> ResourceLocation<'a> {
@@ -39,14 +42,16 @@ impl<'a> ResourceLocation<'a> {
     pub(crate) fn id(&self) -> &ResourceIdentifier<'a> {
         match self {
             Self::BlockModel(id) | Self::ItemModel(id) => id.deref(),
-            Self::BlockStates(id) => id,
+            Self::BlockStates(id) | Self::Texture(id) => id,
         }
     }
 
     /// Returns the type of resource that this location references.
     pub fn kind(&self) -> ResourceKind {
         match self {
-            Self::BlockStates(_) | Self::BlockModel(_) | Self::ItemModel(_) => ResourceKind::Assets,
+            Self::BlockStates(_) | Self::BlockModel(_) | Self::ItemModel(_) | Self::Texture(_) => {
+                ResourceKind::Assets
+            }
         }
     }
 
@@ -131,6 +136,7 @@ impl<'a> ResourceLocation<'a> {
             Self::BlockStates(_) => "blockstates",
             Self::BlockModel(_) => "models/block",
             Self::ItemModel(_) => "models/item",
+            Self::Texture(_) => "textures",
         };
         path.push(remaining);
 
@@ -141,6 +147,7 @@ impl<'a> ResourceLocation<'a> {
     pub fn extension(&self) -> &'static str {
         match self {
             Self::BlockStates(_) | Self::BlockModel(_) | Self::ItemModel(_) => "json",
+            Self::Texture(_) => "png",
         }
     }
 
