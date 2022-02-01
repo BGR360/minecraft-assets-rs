@@ -63,8 +63,12 @@ pub struct Model {
     /// block. If set to `front`, model is shaded like a flat item. Defaults to
     /// `side`.
     ///
-    /// **Applies only to item models.**
-    pub gui_light: Option<GuiLightMode>,
+    /// **Applies only to item models.**[^1]
+    ///
+    /// [^1]: In versions >= 1.16.2, it appears that `block/block.json` also has
+    ///     this field set.
+    #[serde(rename = "gui_light")]
+    pub gui_light_mode: Option<GuiLightMode>,
 
     /// Specifies cases in which a different model should be used based on item
     /// tags.
