@@ -1,4 +1,4 @@
-use crate::schemas::models::{Display, Element, GuiLightMode, Model, Textures};
+use crate::schemas::models::{Display, Element, GuiLightMode, Model, Texture, Textures};
 
 /// Methods for resolving the properties of a [`Model`] with respect to its
 /// parents.
@@ -12,10 +12,99 @@ impl ModelResolver {
     /// The method takes in an iterator of [`Model`]s where the first element is
     /// the model being resolved, and the subsequent elements (if any) are the
     /// chain of parents of that model.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use minecraft_assets::api::{ModelResolver};
+    /// use maplit::hashmap;
+    ///
+    /// use minecraft_assets::schemas::models::*;
+    ///
+    /// let parent = Model {
+    ///     textures: Some(Textures::from(hashmap! {
+    ///         "up" => "#side",
+    ///         "down" => "#side"
+    ///     })),
+    ///     elements: Some(vec![
+    ///         Element {
+    ///             faces: hashmap! {
+    ///                 BlockFace::Up => ElementFace {
+    ///                     texture: Texture::from("#up"),
+    ///                     ..Default::default()
+    ///                 },
+    ///                 BlockFace::Down => ElementFace {
+    ///                     texture: Texture::from("#down"),
+    ///                     ..Default::default()
+    ///                 },
+    ///                 BlockFace::East => ElementFace {
+    ///                     texture: Texture::from("#side"),
+    ///                     ..Default::default()
+    ///                 },
+    ///                 BlockFace::West => ElementFace {
+    ///                     texture: Texture::from("#side"),
+    ///                     ..Default::default()
+    ///                 }
+    ///             },
+    ///             ..Default::default()
+    ///         }
+    ///     ]),
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let child = Model {
+    ///     textures: Some(Textures::from(hashmap! {
+    ///         "up" => "textures/up",
+    ///         "side" => "textures/side"
+    ///     })),
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let expected = Model {
+    ///     textures: Some(Textures::from(hashmap! {
+    ///         "up" => "textures/up",
+    ///         "down" => "textures/side",
+    ///         "side" => "textures/side"
+    ///     })),
+    ///     elements: Some(vec![
+    ///         Element {
+    ///             faces: hashmap! {
+    ///                 BlockFace::Up => ElementFace {
+    ///                     texture: Texture::from("textures/up"),
+    ///                     ..Default::default()
+    ///                 },
+    ///                 BlockFace::Down => ElementFace {
+    ///                     texture: Texture::from("textures/side"),
+    ///                     ..Default::default()
+    ///                 },
+    ///                 BlockFace::East => ElementFace {
+    ///                     texture: Texture::from("textures/side"),
+    ///                     ..Default::default()
+    ///                 },
+    ///                 BlockFace::West => ElementFace {
+    ///                     texture: Texture::from("textures/side"),
+    ///                     ..Default::default()
+    ///                 }
+    ///             },
+    ///             ..Default::default()
+    ///         }
+    ///     ]),
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let resolved = ModelResolver::resolve_model([&child, &parent].into_iter());
+    ///
+    /// assert_eq!(resolved, expected);
+    /// ```
     pub fn resolve_model<'a>(models: impl IntoIterator<Item = &'a Model> + Clone) -> Model {
-        let display = Self::resolve_display(models.clone());
         let textures = Self::resolve_textures(models.clone());
-        let elements = Self::resolve_elements(models.clone());
+        let mut elements = Self::resolve_elements(models.clone());
+
+        if let Some(ref mut elements) = elements {
+            Self::resolve_element_textures(elements, &textures);
+        }
+
+        let display = Self::resolve_display(models.clone());
         let ambient_occlusion = Self::resolve_ambient_occlusion(models.clone());
         let gui_light_mode = Self::resolve_gui_light_mode(models.clone());
         let overrides = models.into_iter().next().unwrap().overrides.clone();
@@ -82,13 +171,14 @@ impl ModelResolver {
 
         for model in models.into_iter() {
             if let Some(mut parent_textures) = model.textures.clone() {
-                // Resolve variables in the child using the parent textures first.
-                textures.resolve(&parent_textures);
-
-                // Then resolve variables in the parent using the child textures.
+                // Resolve variables in the parent using the child textures first.
                 parent_textures.resolve(&textures);
 
-                // Merge them both.
+                // Then resolve variables in the child using the parent textures.
+                textures.resolve(&parent_textures);
+
+                // Merge the **child** into the parent.
+                std::mem::swap(&mut textures, &mut parent_textures);
                 textures.merge(parent_textures.clone());
             }
         }
@@ -152,6 +242,21 @@ impl ModelResolver {
         models: impl IntoIterator<Item = &'a Model>,
     ) -> Option<Vec<Element>> {
         Self::first_model_where_some(models, |model| model.elements.as_ref()).cloned()
+    }
+
+    /// Iterates through each [`ElementFace`] in each [`Element`] and resolves
+    /// any texture variables using the provided map.
+    pub fn resolve_element_textures<'a>(
+        elements: impl IntoIterator<Item = &'a mut Element>,
+        textures: &Textures,
+    ) {
+        for element in elements.into_iter() {
+            for face in element.faces.values_mut() {
+                if let Some(substitution) = face.texture.resolve(textures) {
+                    face.texture = Texture::from(substitution);
+                }
+            }
+        }
     }
 
     /// Iterates through a [`Model`] and all of its parents to resolve the

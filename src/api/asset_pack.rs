@@ -295,7 +295,7 @@ impl AssetPack {
 
             match parent_owned {
                 Some(parent) if !parent.is_builtin() => {
-                    println!("{}", parent.as_str());
+                    //println!("{}", parent.as_str());
                     current = match current {
                         ResourceLocation::BlockModel(_) => ResourceLocation::BlockModel(parent),
                         ResourceLocation::ItemModel(_) => ResourceLocation::ItemModel(parent),

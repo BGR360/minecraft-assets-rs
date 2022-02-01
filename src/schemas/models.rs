@@ -279,7 +279,7 @@ impl Textures {
     /// ```
     pub fn merge(&mut self, other: Self) {
         for (name, texture) in other.variables.into_iter() {
-            println!("inserting: {:?}", (&name, &texture));
+            //println!("inserting: {:?}", (&name, &texture));
             self.insert(name, texture);
         }
     }
