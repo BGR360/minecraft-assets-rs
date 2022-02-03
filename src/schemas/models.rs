@@ -630,11 +630,9 @@ pub enum Axis {
 #[serde(rename_all = "lowercase")]
 #[allow(missing_docs)]
 pub enum BlockFace {
-    /// One of two possible names for `"down"` supported by the format.
-    Bottom,
-    /// One of two possible names for `"down"` supported by the format.
+    // The format accepts two possible names for `"down"`.
+    #[serde(alias = "bottom")]
     Down,
-
     Up,
     North,
     South,
