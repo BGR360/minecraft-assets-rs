@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// [doors]: https://minecraft.fandom.com/wiki/Door
 /// [block state]: https://minecraft.fandom.com/wiki/Block_state
 /// [wiki page]: <https://minecraft.fandom.com/wiki/Model#Block_states>
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum BlockStates {
     /// One way of representing the different states of a block.
@@ -73,6 +73,59 @@ impl BlockStates {
         match self {
             Self::Variants { .. } => None,
             Self::Multipart { cases: multipart } => Some(&multipart[..]),
+        }
+    }
+
+    /// Consumes `self` and returns a new [`BlockStates::Multipart`] where all
+    /// of the [`Variants`] have been converted to an equivalent [`Case`]
+    ///
+    /// [`Variants`]: Self::Variants
+    /// [`Case`]: multipart::Case
+    pub fn into_multipart(self) -> Vec<multipart::Case> {
+        match self {
+            Self::Multipart { cases } => cases,
+
+            Self::Variants { variants } => {
+                if variants.len() == 1 {
+                    let variant = variants
+                        .into_iter()
+                        .map(|(_, variant)| variant)
+                        .next()
+                        .unwrap();
+
+                    let case = multipart::Case {
+                        when: None,
+                        apply: variant,
+                    };
+
+                    vec![case]
+                } else {
+                    variants
+                        .into_iter()
+                        .map(|(state_values, variant)| {
+                            let state_values: HashMap<String, multipart::StateValue> = state_values
+                                .split(',')
+                                .map(|state_value| {
+                                    let split: Vec<&str> = state_value.split('=').collect();
+                                    (split[0], split[1])
+                                })
+                                .map(|(state, value)| {
+                                    (String::from(state), multipart::StateValue::from(value))
+                                })
+                                .collect();
+
+                            let condition = multipart::Condition { and: state_values };
+
+                            let when_clause = multipart::WhenClause::Single(condition);
+
+                            multipart::Case {
+                                when: Some(when_clause),
+                                apply: variant,
+                            }
+                        })
+                        .collect()
+                }
+            }
         }
     }
 }
@@ -201,7 +254,7 @@ pub mod multipart {
     use super::*;
 
     /// Specifies a case and the model that should apply in that case.
-    #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
+    #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Case {
         /// A list of cases that have to be met for the model to be applied.
         ///
@@ -212,8 +265,25 @@ pub mod multipart {
         pub apply: Variant,
     }
 
+    impl Case {
+        /// Returns `true` if the case applies given the provided state values.
+        ///
+        /// This can either be when `when` is `None` or if
+        /// [`WhenClause::applies`] is true.
+        pub fn applies<'a, I>(&self, state_values: I) -> bool
+        where
+            I: IntoIterator<Item = (&'a str, &'a StateValue)> + Clone,
+        {
+            if let Some(ref when_clause) = self.when {
+                when_clause.applies(state_values)
+            } else {
+                true
+            }
+        }
+    }
+
     /// A list of conditions that have to be met for a model to be applied.
-    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
     #[serde(untagged)]
     pub enum WhenClause {
         /// A `when` clause that is true when the given condition is true.
@@ -238,6 +308,19 @@ pub mod multipart {
                 Self::Or { or } => &or[..],
             }
         }
+
+        /// Returns `true` if any of the conditions specified by this `when`
+        /// clause are satisfied by the provided state values.
+        ///
+        /// See [`Condition::applies`].
+        pub fn applies<'a, I>(&self, state_values: I) -> bool
+        where
+            I: IntoIterator<Item = (&'a str, &'a StateValue)> + Clone,
+        {
+            self.conditions()
+                .iter()
+                .any(|condition| condition.applies(state_values.clone()))
+        }
     }
 
     /// A set of conditions that **all** have to match the block to return true.
@@ -247,11 +330,65 @@ pub mod multipart {
     /// ```json
     /// "when": {"north": "side|up", "east": "side|up" }
     /// ```
-    #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq, Eq)]
+    #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Condition {
         /// Map from state name to state value that forms the list of conditions.
         #[serde(flatten)]
         pub and: HashMap<String, StateValue>,
+    }
+
+    impl Condition {
+        /// Returns `true` if
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// # use minecraft_assets::schemas::blockstates::multipart::*;
+        /// use maplit::hashmap;
+        ///
+        /// let condition = Condition {
+        ///     and: hashmap! {
+        ///         String::from("var1") => StateValue::from("foo|bar"),
+        ///         String::from("var2") => StateValue::from(false),
+        ///     },
+        /// };
+        ///
+        /// let foo_string = StateValue::from("foo");
+        /// let other_string = StateValue::from("other");
+        /// let true_string = StateValue::from("true");
+        /// let false_string = StateValue::from("false");
+        ///
+        /// let state_values = vec![
+        ///     ("var1", &foo_string),
+        ///     ("var2", &false_string),
+        ///     ("var3", &true_string),
+        /// ];
+        /// assert!(condition.applies(state_values.into_iter()));
+        ///
+        /// let state_values = vec![
+        ///     ("var2", &false_string),
+        /// ];
+        /// assert!(!condition.applies(state_values.into_iter()));
+        ///
+        /// let state_values = vec![
+        ///     ("var1", &other_string),
+        ///     ("var2", &false_string),
+        /// ];
+        /// assert!(!condition.applies(state_values.into_iter()));
+        /// ```
+        pub fn applies<'a, I>(&self, state_values: I) -> bool
+        where
+            I: IntoIterator<Item = (&'a str, &'a StateValue)>,
+        {
+            let state_values: HashMap<&'a str, &'a StateValue> = state_values.into_iter().collect();
+
+            self.and.iter().all(|(state, required_value)| {
+                state_values
+                    .get(state.as_str())
+                    .map(|value| *required_value == **value)
+                    .unwrap_or(false)
+            })
+        }
     }
 
     /// The right-hand side of a [`Condition`] requirement.
@@ -260,7 +397,7 @@ pub mod multipart {
     /// "when": {"north": "side|up", "east": false }
     ///                   ^^^^^^^^^          ^^^^^
     /// ```
-    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+    #[derive(Deserialize, Serialize, Debug, Clone)]
     #[serde(untagged)]
     pub enum StateValue {
         /// Unquoted bool value.
@@ -268,6 +405,132 @@ pub mod multipart {
 
         /// String value (possibly boolean-like, i.e., `"true"` or `"false"`).
         String(String),
+    }
+
+    impl StateValue {
+        /// Returns the value interpreted as a bool, or `None` if this is not
+        /// possible.
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// # use minecraft_assets::schemas::blockstates::multipart::*;
+        /// let value = StateValue::from(true);
+        /// assert_eq!(value.as_bool(), Some(true));
+        ///
+        /// let value = StateValue::from(false);
+        /// assert_eq!(value.as_bool(), Some(false));
+        ///
+        /// let value = StateValue::from("true");
+        /// assert_eq!(value.as_bool(), Some(true));
+        ///
+        /// let value = StateValue::from("false");
+        /// assert_eq!(value.as_bool(), Some(false));
+        ///
+        /// let value = StateValue::from("not_a_bool");
+        /// assert_eq!(value.as_bool(), None);
+        /// ```
+        pub fn as_bool(&self) -> Option<bool> {
+            match self {
+                Self::Bool(b) => Some(*b),
+                Self::String(s) if s == "true" => Some(true),
+                Self::String(s) if s == "false" => Some(false),
+                _ => None,
+            }
+        }
+    }
+
+    /// # Examples
+    ///
+    /// Comparing to an unquoted boolean value:
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::blockstates::multipart::*;
+    /// let left = StateValue::from(true);
+    ///
+    /// let right = StateValue::from(true);
+    /// assert!(left == right);
+    ///
+    /// let right = StateValue::from(false);
+    /// assert!(left != right);
+    ///
+    /// let right = StateValue::from("true");
+    /// assert!(left == right);
+    ///
+    /// let right = StateValue::from("false");
+    /// assert!(left != right);
+    ///
+    /// let right = StateValue::from("not_a_bool");
+    /// assert!(left != right);
+    /// ```
+    ///
+    /// Comparing to a quoted boolean value:
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::blockstates::multipart::*;
+    /// let left = StateValue::from("true");
+    ///
+    /// let right = StateValue::from(true);
+    /// assert!(left == right);
+    ///
+    /// let right = StateValue::from(false);
+    /// assert!(left != right);
+    /// ```
+    ///
+    /// Comparing to a single string value:
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::blockstates::multipart::*;
+    /// let left = StateValue::from("foo");
+    ///
+    /// let right = StateValue::from("foo");
+    /// assert!(left == right);
+    ///
+    /// let right = StateValue::from("bar");
+    /// assert!(left != right);
+    ///
+    /// let right = StateValue::from(true);
+    /// assert!(left != right);
+    /// ```
+    ///
+    /// Comparing to a multi-string value with `|` bars:
+    ///
+    /// ```
+    /// # use minecraft_assets::schemas::blockstates::multipart::*;
+    /// let left = StateValue::from("foo|bar");
+    ///
+    /// let right = StateValue::from("foo");
+    /// assert!(left == right);
+    ///
+    /// let right = StateValue::from("bar");
+    /// assert!(left == right);
+    ///
+    /// let right = StateValue::from("not_foo_or_bar");
+    /// assert!(left != right);
+    /// ```
+    impl PartialEq for StateValue {
+        fn eq(&self, other: &Self) -> bool {
+            match self {
+                Self::String(s) => {
+                    match other {
+                        Self::Bool(other_b) => {
+                            self.as_bool().map(|b| b == *other_b).unwrap_or(false)
+                        }
+                        Self::String(other_s) => {
+                            // Account for "or"s in the string value (i.e., `|`).
+                            s.split('|').any(|s| s == other_s)
+                        }
+                    }
+                }
+                Self::Bool(b) => {
+                    if let Some(other_b) = other.as_bool() {
+                        *b == other_b
+                    } else {
+                        false
+                    }
+                }
+            }
+        }
     }
 
     impl From<bool> for StateValue {
@@ -286,5 +549,101 @@ pub mod multipart {
         fn from(source: String) -> Self {
             Self::String(source)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::multipart::*;
+    use super::*;
+
+    use maplit::hashmap;
+
+    fn make_single_variant(model_name: &str) -> Variant {
+        Variant::Single(ModelProperties {
+            model: String::from(model_name),
+            ..Default::default()
+        })
+    }
+
+    fn do_test(
+        blockstates: BlockStates,
+        state_values: &HashMap<String, StateValue>,
+        expected_models: &[&'static str],
+    ) {
+        let cases = blockstates.into_multipart();
+
+        let actual_models = cases
+            .iter()
+            .filter(|case| {
+                case.applies(
+                    state_values
+                        .iter()
+                        .map(|(state, value)| (state.as_str(), value)),
+                )
+            })
+            .flat_map(|case| case.apply.models())
+            .map(|model_properties| model_properties.model.as_str())
+            .collect::<Vec<_>>();
+
+        assert_eq!(&actual_models[..], expected_models);
+    }
+
+    #[test]
+    fn test_single_variant() {
+        let blockstates = BlockStates::Variants {
+            variants: hashmap! {
+                String::from("") => make_single_variant("model1"),
+            },
+        };
+
+        let state_values = HashMap::default();
+
+        do_test(blockstates, &state_values, &["model1"]);
+    }
+
+    #[test]
+    fn test_variants() {
+        let blockstates = BlockStates::Variants {
+            variants: hashmap! {
+                String::from("var1=foo,var2=true") => make_single_variant("model1"),
+                String::from("var1=foo,var2=false") => make_single_variant("model2"),
+            },
+        };
+
+        let state_values = hashmap! {
+            String::from("var1") => StateValue::from("foo"),
+            String::from("var2") => StateValue::from("false"),
+        };
+
+        do_test(blockstates, &state_values, &["model2"]);
+    }
+
+    #[test]
+    fn test_multipart() {
+        let blockstates = BlockStates::Multipart {
+            cases: vec![
+                Case {
+                    when: None,
+                    apply: make_single_variant("model1"),
+                },
+                Case {
+                    when: Some(WhenClause::Single(Condition {
+                        and: hashmap! {
+                            String::from("var1") => StateValue::from("foo|bar"),
+                            String::from("var2") => StateValue::from(true),
+                        },
+                    })),
+                    apply: make_single_variant("model2"),
+                },
+            ],
+        };
+
+        let state_values = hashmap! {
+            String::from("var1") => StateValue::from("bar"),
+            String::from("var2") => StateValue::from("true"),
+        };
+
+        do_test(blockstates, &state_values, &["model1", "model2"]);
     }
 }
