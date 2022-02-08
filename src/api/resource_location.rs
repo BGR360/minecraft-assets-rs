@@ -22,7 +22,7 @@ pub enum ResourceKind {
 ///
 /// [resource location]: <https://minecraft.fandom.com/wiki/Resource_location>
 /// [`ResourceIdentifier`]: ResourceIdentifier#borrowing--ownership
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ResourceLocation<'a> {
     /// Represents the location of a file in `assets/<namespace>/blockstates/`.
     BlockStates(ResourceIdentifier<'a>),
@@ -187,7 +187,7 @@ impl<'a> ResourceLocation<'a> {
 ///
 /// By default, no copying or allocating is done. You must call
 /// [`into_owned()`][Self::into_owned] to get an owned identifier.
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub struct ResourceIdentifier<'a>(Cow<'a, str>);
 
 impl<'a> ResourceIdentifier<'a> {
@@ -399,7 +399,7 @@ impl<'a> fmt::Display for ResourceIdentifier<'a> {
 ///
 /// [`BlockModel`]: ResourceLocation::BlockModel
 /// [`ItemModel`]: ResourceLocation::ItemModel
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct ModelIdentifier<'a>(ResourceIdentifier<'a>);
 
 impl<'a> ModelIdentifier<'a> {
