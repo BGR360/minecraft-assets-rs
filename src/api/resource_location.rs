@@ -432,6 +432,13 @@ impl<'a> ModelIdentifier<'a> {
             .unwrap_or_else(|| self.0.path())
     }
 
+    /// Returns a new [`ModelIdentifier`] that owns the underlying string.
+    ///
+    /// See the [`ResourceIdentifier::into_owned`] docs for more information.
+    pub fn into_owned(&self) -> ModelIdentifier<'static> {
+        ModelIdentifier(self.0.into_owned())
+    }
+
     pub(crate) fn is_builtin(&self) -> bool {
         match self.slash_position() {
             Some(index) => {
