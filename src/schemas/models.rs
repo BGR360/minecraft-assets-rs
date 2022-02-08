@@ -629,6 +629,7 @@ pub enum Axis {
 #[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 #[allow(missing_docs)]
+#[repr(u8)]
 pub enum BlockFace {
     // The format accepts two possible names for `"down"`.
     #[serde(alias = "bottom")]
