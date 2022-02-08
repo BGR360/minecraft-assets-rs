@@ -27,4 +27,4 @@ jobs:
         run: ./tests/setup.sh
       
       - name: Run integration tests
-        run: cargo test --features tests
+        run: cargo test --features tests --no-fail-fast

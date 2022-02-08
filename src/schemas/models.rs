@@ -425,12 +425,12 @@ pub struct Element {
     /// Start point of a cuboid according to the scheme `[x, y, z]`.
     ///
     /// Values must be between -16 and 32.
-    pub from: [i8; 3],
+    pub from: [f32; 3],
 
     /// Stop point of a cuboid according to the scheme `[x, y, z]`.
     ///
     /// Values must be between -16 and 32.
-    pub to: [i8; 3],
+    pub to: [f32; 3],
 
     /// Holds all the faces of the cuboid. If a face is left out, it does not
     /// render.
@@ -454,8 +454,8 @@ impl Element {
 impl Default for Element {
     fn default() -> Self {
         Self {
-            from: [0, 0, 0],
-            to: [16, 16, 16],
+            from: [0.0, 0.0, 0.0],
+            to: [16.0, 16.0, 16.0],
             faces: Default::default(),
             rotation: Default::default(),
             shade: Self::default_shade(),
@@ -467,7 +467,7 @@ impl Default for Element {
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct ElementRotation {
     /// Sets the center of the rotation according to the scheme `[x, y, z]`.
-    pub origin: [i8; 3],
+    pub origin: [f32; 3],
 
     /// Specifies the direction of rotation.
     pub axis: Axis,
@@ -493,7 +493,7 @@ impl ElementRotation {
 impl Default for ElementRotation {
     fn default() -> Self {
         Self {
-            origin: [0, 0, 0],
+            origin: [0.0, 0.0, 0.0],
             axis: Axis::X,
             angle: 0.0,
             rescale: Self::default_rescale(),
@@ -514,7 +514,7 @@ pub struct ElementFace {
     /// The texture behavior is inconsistent if UV extends below 0 or above 16.
     /// If the numbers of `x1` and `x2` are swapped (e.g. from `0, 0, 16, 16` to
     /// `16, 0, 0, 16`), the texture flips.
-    pub uv: Option<[u8; 4]>,
+    pub uv: Option<[f32; 4]>,
 
     /// Specifies the texture as [texture variable] prepended with a `#`.
     ///
