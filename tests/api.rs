@@ -177,7 +177,7 @@ fn for_each_blockstates() {
 
     let mut paths = Vec::new();
     assets
-        .for_each_blockstates(|path| -> Result<(), io::Error> {
+        .for_each_blockstates(|_, path| -> Result<(), io::Error> {
             paths.push(PathBuf::from(path));
             Ok(())
         })
@@ -192,7 +192,7 @@ fn for_each_block_model() {
 
     let mut paths = Vec::new();
     assets
-        .for_each_block_model(|path| -> Result<(), io::Error> {
+        .for_each_block_model(|_, path| -> Result<(), io::Error> {
             paths.push(PathBuf::from(path));
             Ok(())
         })
@@ -207,7 +207,7 @@ fn for_each_item_model() {
 
     let mut paths = Vec::new();
     assets
-        .for_each_item_model(|path| -> Result<(), io::Error> {
+        .for_each_item_model(|_, path| -> Result<(), io::Error> {
             paths.push(PathBuf::from(path));
             Ok(())
         })
@@ -221,7 +221,7 @@ fn for_each_blockstates_with_error() {
     let assets = get_asset_pack("1.14");
 
     assert_matches!(
-        assets.for_each_item_model(|_| Err(io::Error::new(io::ErrorKind::Other, ""))),
+        assets.for_each_item_model(|_, _| Err(io::Error::new(io::ErrorKind::Other, ""))),
         Err(_)
     );
 }

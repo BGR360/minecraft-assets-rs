@@ -201,38 +201,36 @@ impl AssetPack {
     /// `assets/<namespace>/blockstates/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_blockstates<F, E>(&self, mut op: F) -> Result<()>
+    pub fn for_each_blockstates<F, E>(&self, op: F) -> Result<()>
     where
-        F: FnMut(&Path) -> Result<(), E>,
+        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::BlockStates("foo".into()), |_, path| {
-            op(path)
-        })
+        self.for_each_file(&ResourceLocation::BlockStates("foo".into()), op)
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/block/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_block_model<F, E>(&self, mut op: F) -> Result<()>
+    pub fn for_each_block_model<F, E>(&self, op: F) -> Result<()>
     where
-        F: FnMut(&Path) -> Result<(), E>,
+        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::BlockModel("".into()), |_, path| op(path))
+        self.for_each_file(&ResourceLocation::BlockModel("".into()), op)
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/item/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_item_model<F, E>(&self, mut op: F) -> Result<()>
+    pub fn for_each_item_model<F, E>(&self, op: F) -> Result<()>
     where
-        F: FnMut(&Path) -> Result<(), E>,
+        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::ItemModel("".into()), |_, path| op(path))
+        self.for_each_file(&ResourceLocation::ItemModel("".into()), op)
     }
 
     /// Runs the given closure once for each file that exists in
