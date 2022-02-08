@@ -201,36 +201,51 @@ impl AssetPack {
     /// `assets/<namespace>/blockstates/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_blockstates<F, E>(&self, op: F) -> Result<()>
+    pub fn for_each_blockstates<F, E>(&self, mut op: F) -> Result<()>
     where
         F: FnMut(&Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::BlockStates("foo".into()), op)
+        self.for_each_file(&ResourceLocation::BlockStates("foo".into()), |_, path| {
+            op(path)
+        })
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/block/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_block_model<F, E>(&self, op: F) -> Result<()>
+    pub fn for_each_block_model<F, E>(&self, mut op: F) -> Result<()>
     where
         F: FnMut(&Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::BlockModel("foo".into()), op)
+        self.for_each_file(&ResourceLocation::BlockModel("".into()), |_, path| op(path))
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/item/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_item_model<F, E>(&self, op: F) -> Result<()>
+    pub fn for_each_item_model<F, E>(&self, mut op: F) -> Result<()>
     where
         F: FnMut(&Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::ItemModel("foo".into()), op)
+        self.for_each_file(&ResourceLocation::ItemModel("".into()), |_, path| op(path))
+    }
+
+    /// Runs the given closure once for each file that exists in
+    /// `assets/<namespace>/textures/`.
+    ///
+    /// The closure is passed the [`ResourceIdentifier`] for each texture as
+    /// well as the full path to each image file.
+    pub fn for_each_texture<F, E>(&self, op: F) -> Result<()>
+    where
+        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        Error: From<E>,
+    {
+        self.for_each_file(&ResourceLocation::Texture("".into()), op)
     }
 
     /// Loads a given resource directly given the full path to its file.
@@ -311,21 +326,47 @@ impl AssetPack {
 
     fn for_each_file<F, E>(&self, resource: &ResourceLocation, mut op: F) -> Result<()>
     where
-        F: FnMut(&Path) -> Result<(), E>,
+        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
         let directory = self.get_resource_directory(resource);
 
-        for entry in fs::read_dir(directory)? {
+        self.for_each_file_inner(&directory, &directory, &mut op)
+    }
+
+    fn for_each_file_inner<F, E>(
+        &self,
+        original_directory: &Path,
+        current_directory: &Path,
+        op: &mut F,
+    ) -> Result<()>
+    where
+        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        Error: From<E>,
+    {
+        for entry in fs::read_dir(current_directory)? {
             let entry = entry?;
 
-            let path = entry.path();
+            let entry_path = entry.path();
 
-            if path.file_name().unwrap().to_string_lossy().starts_with('_') {
+            if entry_path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with('_')
+            {
                 continue;
             }
 
-            op(&entry.path())?;
+            if entry.file_type()?.is_dir() {
+                self.for_each_file_inner(original_directory, &entry_path, op)?;
+            } else {
+                let suffix = entry_path.strip_prefix(original_directory).unwrap();
+                let suffix = suffix.with_extension("");
+                let suffix = suffix.to_string_lossy();
+
+                op(&ResourceIdentifier::from(suffix.as_ref()), &entry_path)?;
+            }
         }
 
         Ok(())
