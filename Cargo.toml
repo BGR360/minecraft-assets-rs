@@ -1,6 +1,6 @@
 [package]
 name = "minecraft-assets"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 description = "Parsing Minecraft asset files and resource packs in Rust"
 repository = "https://github.com/BGR360/minecraft-assets-rs"
