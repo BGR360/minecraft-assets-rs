@@ -517,8 +517,11 @@ pub mod multipart {
                             self.as_bool().map(|b| b == *other_b).unwrap_or(false)
                         }
                         Self::String(other_s) => {
-                            // Account for "or"s in the string value (i.e., `|`).
-                            s.split('|').any(|s| s == other_s)
+                            s == other_s
+                                // Account for "or"s in this value (i.e., `|`).
+                                || s.split('|').any(|s| s == other_s)
+                                // Account for "or"s in the other value.
+                                || other_s.split('|').any(|other_s| s == other_s)
                         }
                     }
                 }
