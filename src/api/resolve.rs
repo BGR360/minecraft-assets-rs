@@ -246,6 +246,8 @@ impl ModelResolver {
 
     /// Iterates through each [`ElementFace`] in each [`Element`] and resolves
     /// any texture variables using the provided map.
+    ///
+    /// [`ElementFace`]: crate::schemas::models::ElementFace
     pub fn resolve_element_textures<'a>(
         elements: impl IntoIterator<Item = &'a mut Element>,
         textures: &Textures,

@@ -302,7 +302,7 @@ impl AssetPack {
             let parent_owned = model
                 .parent
                 .as_ref()
-                .map(|parent| ModelIdentifier::from(ResourceIdentifier::from(parent).into_owned()));
+                .map(|parent| ModelIdentifier::from(ResourceIdentifier::from(parent).to_owned()));
 
             op(model);
 

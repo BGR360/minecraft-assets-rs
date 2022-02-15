@@ -186,7 +186,7 @@ impl<'a> ResourceLocation<'a> {
 /// either borrow or take ownership of the underlying string.
 ///
 /// By default, no copying or allocating is done. You must call
-/// [`into_owned()`][Self::into_owned] to get an owned identifier.
+/// [`to_owned()`][Self::to_owned] to get an owned identifier.
 #[derive(Clone, Hash)]
 pub struct ResourceIdentifier<'a>(Cow<'a, str>);
 
@@ -332,7 +332,7 @@ impl<'a> ResourceIdentifier<'a> {
     /// std::thread::spawn(move || println!("{}", id));
     /// ```
     ///
-    /// Calling [`into_owned()`][Self::into_owned] on the identifier allows it
+    /// Calling [`to_owned()`][Self::to_owned] on the identifier allows it
     /// to be sent to the thread:
     ///
     /// ```
@@ -340,11 +340,11 @@ impl<'a> ResourceIdentifier<'a> {
     /// let string = String::from("my:ident");
     ///
     /// let id = ResourceIdentifier::from(&string);
-    /// let id = id.into_owned();
+    /// let id = id.to_owned();
     ///
     /// std::thread::spawn(move || println!("{}", id));
     /// ```
-    pub fn into_owned(&self) -> ResourceIdentifier<'static> {
+    pub fn to_owned(&self) -> ResourceIdentifier<'static> {
         let string = self.0.deref().to_owned();
         ResourceIdentifier(Cow::Owned(string))
     }
@@ -434,9 +434,9 @@ impl<'a> ModelIdentifier<'a> {
 
     /// Returns a new [`ModelIdentifier`] that owns the underlying string.
     ///
-    /// See the [`ResourceIdentifier::into_owned`] docs for more information.
-    pub fn into_owned(&self) -> ModelIdentifier<'static> {
-        ModelIdentifier(self.0.into_owned())
+    /// See the [`ResourceIdentifier::to_owned`] docs for more information.
+    pub fn to_owned(&self) -> ModelIdentifier<'static> {
+        ModelIdentifier(self.0.to_owned())
     }
 
     pub(crate) fn is_builtin(&self) -> bool {
