@@ -12,7 +12,7 @@ pub use asset_pack::AssetPack;
 pub use resolve::ModelResolver;
 pub use resource::{
     ModelIdentifier, ResourceCategory, ResourceIdentifier, ResourceKind, ResourceLocation,
-    MINECRAFT_NAMESPACE,
+    ResourcePath, MINECRAFT_NAMESPACE,
 };
 
 /// Error types that can be returned from API methods.

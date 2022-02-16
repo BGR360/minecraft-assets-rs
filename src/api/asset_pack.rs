@@ -6,7 +6,10 @@ use std::{
 use serde::de::DeserializeOwned;
 
 use crate::{
-    api::{Error, ModelIdentifier, ResourceIdentifier, ResourceKind, ResourceLocation, Result},
+    api::{
+        Error, ModelIdentifier, ResourceIdentifier, ResourceKind, ResourceLocation, ResourcePath,
+        Result,
+    },
     schemas::{BlockStates, Model},
 };
 
@@ -43,55 +46,6 @@ impl AssetPack {
         Self {
             root: PathBuf::from(root_dir.as_ref()),
         }
-    }
-
-    /// Returns the full path to the directory containing the given
-    /// [`ResourceLocation`].
-    ///
-    /// **NOTE:** no validation of the path is performed. The returned path may
-    /// not point to an existing directory. This method simply computes what the
-    /// path should be for a given resource.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use minecraft_assets::api::*;
-    /// let assets = AssetPack::at_path("~/.minecraft/");
-    ///
-    /// let loc = ResourceLocation::blockstates("stone");
-    /// assert_eq!(
-    ///     assets.get_resource_directory(&loc).to_string_lossy(),
-    ///     "~/.minecraft/assets/minecraft/blockstates"
-    /// );
-    /// ```
-    pub fn get_resource_directory(&self, resource: &ResourceLocation) -> PathBuf {
-        let mut path = self.root.clone();
-        path.push(&resource.directory());
-        path
-    }
-
-    /// Returns the full path to a resource given a [`ResourceLocation`].
-    ///
-    /// **NOTE:** no validation of the path is performed. The returned path may
-    /// not point to an existing file. This method simply computes what the path
-    /// should be for a given resource.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use minecraft_assets::api::*;
-    /// let assets = AssetPack::at_path("~/.minecraft/");
-    ///
-    /// let loc = ResourceLocation::blockstates("stone");
-    /// assert_eq!(
-    ///     assets.get_resource_path(&loc).to_string_lossy(),
-    ///     "~/.minecraft/assets/minecraft/blockstates/stone.json"
-    /// );
-    /// ```
-    pub fn get_resource_path(&self, resource: &ResourceLocation) -> PathBuf {
-        let mut path = self.root.clone();
-        path.push(&resource.path());
-        path
     }
 
     /// Loads the [`BlockStates`] of the block with the provided id.
@@ -199,36 +153,36 @@ impl AssetPack {
     /// `assets/<namespace>/blockstates/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_blockstates<F, E>(&self, op: F) -> Result<()>
+    pub fn for_each_blockstates<F, E>(&self, namespace: &str, op: F) -> Result<()>
     where
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::blockstates(""), op)
+        self.for_each_file(namespace, ResourceKind::BlockStates, op)
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/block/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_block_model<F, E>(&self, op: F) -> Result<()>
+    pub fn for_each_block_model<F, E>(&self, namespace: &str, op: F) -> Result<()>
     where
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::block_model(""), op)
+        self.for_each_file(namespace, ResourceKind::BlockModel, op)
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/item/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_item_model<F, E>(&self, op: F) -> Result<()>
+    pub fn for_each_item_model<F, E>(&self, namespace: &str, op: F) -> Result<()>
     where
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::item_model(""), op)
+        self.for_each_file(namespace, ResourceKind::ItemModel, op)
     }
 
     /// Runs the given closure once for each file that exists in
@@ -236,12 +190,12 @@ impl AssetPack {
     ///
     /// The closure is passed the [`ResourceIdentifier`] for each texture as
     /// well as the full path to each image file.
-    pub fn for_each_texture<F, E>(&self, op: F) -> Result<()>
+    pub fn for_each_texture<F, E>(&self, namespace: &str, op: F) -> Result<()>
     where
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::texture(""), op)
+        self.for_each_file(namespace, ResourceKind::Texture, op)
     }
 
     /// Loads a given resource directly given the full path to its file.
@@ -269,7 +223,7 @@ impl AssetPack {
     where
         T: DeserializeOwned,
     {
-        let path = self.get_resource_path(resource);
+        let path = ResourcePath::for_resource(&self.root, resource);
         self.load_resource_at_path(path)
     }
 
@@ -324,12 +278,12 @@ impl AssetPack {
         Ok(())
     }
 
-    fn for_each_file<F, E>(&self, resource: &ResourceLocation, mut op: F) -> Result<()>
+    fn for_each_file<F, E>(&self, namespace: &str, kind: ResourceKind, mut op: F) -> Result<()>
     where
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        let directory = self.get_resource_directory(resource);
+        let directory = ResourcePath::for_kind(&self.root, namespace, kind);
 
         self.for_each_file_inner(&directory, &directory, &mut op)
     }

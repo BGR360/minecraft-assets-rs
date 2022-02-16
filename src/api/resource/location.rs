@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use super::{ModelIdentifier, ResourceIdentifier, ResourceKind};
 
 /// Represents a Minecraft [resource location].
@@ -93,7 +91,7 @@ impl<'a> ResourceLocation<'a> {
     ///
     /// [`BlockModel`]: ResourceKind::BlockModel
     /// [`ItemModel`]: ResourceKind::ItemModel
-    pub fn name(&self) -> &str {
+    pub fn path(&self) -> &str {
         if self.is_model() {
             ModelIdentifier::model_name(self.id.path())
         } else {
@@ -124,53 +122,6 @@ impl<'a> ResourceLocation<'a> {
         } else {
             false
         }
-    }
-
-    /// Returns the path to the directory that should contain this resource's file,
-    /// relative to the [`AssetPack`] root.
-    ///
-    /// [`AssetPack`]: crate::api::AssetPack
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use minecraft_assets::api::*;
-    /// let loc = ResourceLocation::blockstates("stone");
-    /// assert_eq!(
-    ///     loc.directory().to_string_lossy(),
-    ///     "assets/minecraft/blockstates"
-    /// );
-    /// ```
-    pub fn directory(&self) -> PathBuf {
-        let mut path = PathBuf::from(self.kind().category().directory());
-        path.push(self.namespace());
-
-        let remaining = self.kind.directory();
-        path.push(remaining);
-
-        path
-    }
-
-    /// Returns the path to the file that should contain this resource, relative
-    /// to the [`AssetPack`] root.
-    ///
-    /// [`AssetPack`]: crate::api::AssetPack
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use minecraft_assets::api::*;
-    /// let loc = ResourceLocation::blockstates("stone");
-    /// assert_eq!(
-    ///     loc.path().to_string_lossy(),
-    ///     "assets/minecraft/blockstates/stone.json"
-    /// );
-    /// ```
-    pub fn path(&self) -> PathBuf {
-        let mut path = self.directory();
-        path.push(self.name());
-
-        path.with_extension(self.kind.extension())
     }
 
     pub fn to_owned(&self) -> ResourceLocation<'static> {

@@ -1,5 +1,6 @@
 use std::{borrow::Cow, fmt, ops::Deref};
 
+#[allow(missing_docs)]
 pub const MINECRAFT_NAMESPACE: &str = "minecraft";
 
 /// A namespaced identifier for an undetermined type of resource.
@@ -211,7 +212,7 @@ impl<'a> fmt::Display for ResourceIdentifier<'a> {
     }
 }
 
-/// A wrapper around a namespaced identifier for a block or item model.
+/// Helper methods for dealing with model identifiers.
 ///
 /// # Why does this exist?
 ///
