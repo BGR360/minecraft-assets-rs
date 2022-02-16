@@ -140,7 +140,8 @@ impl AssetPack {
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/blockstates/`.
     ///
-    /// The closure is passed the full path to each file.
+    /// The closure is passed the [`ResourceLocation`] for each block as
+    /// well as the full path to each json file.
     pub fn for_each_blockstates<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where
         F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
@@ -154,7 +155,8 @@ impl AssetPack {
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/block/`.
     ///
-    /// The closure is passed the full path to each file.
+    /// The closure is passed the [`ResourceLocation`] for each model as
+    /// well as the full path to each json file.
     pub fn for_each_block_model<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where
         F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
@@ -168,7 +170,8 @@ impl AssetPack {
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/item/`.
     ///
-    /// The closure is passed the full path to each file.
+    /// The closure is passed the [`ResourceLocation`] for each model as
+    /// well as the full path to each json file.
     pub fn for_each_item_model<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where
         F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
@@ -182,7 +185,7 @@ impl AssetPack {
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/textures/`.
     ///
-    /// The closure is passed the [`ResourceIdentifier`] for each texture as
+    /// The closure is passed the [`ResourceLocation`] for each texture as
     /// well as the full path to each image file.
     pub fn for_each_texture<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where

@@ -1,5 +1,6 @@
 use crate::api::ResourceCategory;
 
+/// The type of a resource.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ResourceKind {
     /// Resources (`.json`) in `assets/<namespace>/blockstates/`.

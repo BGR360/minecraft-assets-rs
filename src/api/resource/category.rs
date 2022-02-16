@@ -1,3 +1,4 @@
+/// The category of a resource.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ResourceCategory {
     /// Resources located in the `assets/` directory.
