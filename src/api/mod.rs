@@ -1,14 +1,32 @@
-//! An API for programmatically accessing Minecraft asset data.
+//! An API for programmatically accessing Minecraft resources and associated
+//! metadata.
 //!
-//! Start here: [`AssetPack`].
+//! ## Resource Locations
+//!
+//! Every resource is associated with a unique [`ResourceLocation`], which is a
+//! combination of a [`ResourceKind`] and a *namespaced identifier*.
+//!
+//! ## Providers
+//!
+//! Resources can be enumerated and loaded using the [`ResourceProvider`] trait.
+//! This crate provides the [`FileSystemResourceProvider`] as a convenient
+//! implementation of this trait.
+//!
+//! ## Asset Pack
+//!
+//! TODO
 
 use std::io;
 
 mod asset_pack;
+mod provider;
 mod resolve;
 mod resource;
 
 pub use asset_pack::AssetPack;
+pub use provider::{
+    EnumerateResources, FileSystemResourceProvider, LoadResource, ResourceProvider,
+};
 pub use resolve::ModelResolver;
 pub use resource::{
     ModelIdentifier, ResourceCategory, ResourceKind, ResourceLocation, ResourcePath,

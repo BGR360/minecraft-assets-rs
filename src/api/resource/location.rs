@@ -24,7 +24,7 @@ use crate::api::{ModelIdentifier, ResourceKind};
 /// [`to_owned()`][Self::to_owned] to get an owned identifier.
 ///
 /// [resource location]: <https://minecraft.fandom.com/wiki/Resource_location>
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ResourceLocation<'a> {
     pub(crate) id: Cow<'a, str>,
     pub(crate) kind: ResourceKind,
@@ -311,6 +311,13 @@ impl<'a> ResourceLocation<'a> {
 impl<'a> AsRef<str> for ResourceLocation<'a> {
     fn as_ref(&self) -> &str {
         &self.id
+    }
+}
+
+impl<'a> fmt::Debug for ResourceLocation<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let kind = format!("{:?}", self.kind);
+        write!(f, "{}({:?})", kind, &self.id)
     }
 }
 
