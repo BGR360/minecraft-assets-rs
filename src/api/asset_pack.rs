@@ -6,10 +6,7 @@ use std::{
 use serde::de::DeserializeOwned;
 
 use crate::{
-    api::{
-        Error, ModelIdentifier, ResourceIdentifier, ResourceKind, ResourceLocation, ResourcePath,
-        Result,
-    },
+    api::{Error, ModelIdentifier, ResourceKind, ResourceLocation, ResourcePath, Result},
     schemas::{BlockStates, Model},
 };
 
@@ -58,10 +55,7 @@ impl AssetPack {
     /// let states = assets.load_blockstates("stone");
     /// let states = assets.load_blockstates("minecraft:dirt");
     /// ```
-    pub fn load_blockstates<'a>(
-        &self,
-        block_id: impl Into<ResourceIdentifier<'a>>,
-    ) -> Result<BlockStates> {
+    pub fn load_blockstates(&self, block_id: &str) -> Result<BlockStates> {
         self.load_resource(&ResourceLocation::blockstates(block_id))
     }
 
@@ -75,7 +69,7 @@ impl AssetPack {
     /// let model = assets.load_block_model("stone");
     /// let model = assets.load_block_model("block/dirt");
     /// ```
-    pub fn load_block_model<'a>(&self, model: impl Into<ResourceIdentifier<'a>>) -> Result<Model> {
+    pub fn load_block_model(&self, model: &str) -> Result<Model> {
         self.load_resource(&ResourceLocation::block_model(model))
     }
 
@@ -100,10 +94,7 @@ impl AssetPack {
     /// ];
     /// assert_eq!(models, expected);
     /// ```
-    pub fn load_block_model_recursive<'a>(
-        &self,
-        model: impl Into<ResourceIdentifier<'a>>,
-    ) -> Result<Vec<Model>> {
+    pub fn load_block_model_recursive(&self, model: &str) -> Result<Vec<Model>> {
         self.load_model_recursive(&ResourceLocation::block_model(model))
     }
 
@@ -117,7 +108,7 @@ impl AssetPack {
     /// let model = assets.load_item_model("compass");
     /// let model = assets.load_item_model("item/diamond_hoe");
     /// ```
-    pub fn load_item_model<'a>(&self, model: impl Into<ResourceIdentifier<'a>>) -> Result<Model> {
+    pub fn load_item_model(&self, model: &str) -> Result<Model> {
         self.load_resource(&ResourceLocation::item_model(model))
     }
 
@@ -142,47 +133,50 @@ impl AssetPack {
     /// ];
     /// assert_eq!(models, expected);
     /// ```
-    pub fn load_item_model_recursive<'a>(
-        &self,
-        model: impl Into<ResourceIdentifier<'a>>,
-    ) -> Result<Vec<Model>> {
-        self.load_model_recursive(&ResourceLocation::item_model(model.into()))
+    pub fn load_item_model_recursive(&self, model: &str) -> Result<Vec<Model>> {
+        self.load_model_recursive(&ResourceLocation::item_model(model))
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/blockstates/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_blockstates<F, E>(&self, namespace: &str, op: F) -> Result<()>
+    pub fn for_each_blockstates<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where
-        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(namespace, ResourceKind::BlockStates, op)
+        self.for_each_file(namespace, ResourceKind::BlockStates, |name, path| {
+            op(ResourceLocation::blockstates(name), path)
+        })
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/block/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_block_model<F, E>(&self, namespace: &str, op: F) -> Result<()>
+    pub fn for_each_block_model<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where
-        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(namespace, ResourceKind::BlockModel, op)
+        self.for_each_file(namespace, ResourceKind::BlockModel, |name, path| {
+            op(ResourceLocation::block_model(name), path)
+        })
     }
 
     /// Runs the given closure once for each file that exists in
     /// `assets/<namespace>/models/item/`.
     ///
     /// The closure is passed the full path to each file.
-    pub fn for_each_item_model<F, E>(&self, namespace: &str, op: F) -> Result<()>
+    pub fn for_each_item_model<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where
-        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(namespace, ResourceKind::ItemModel, op)
+        self.for_each_file(namespace, ResourceKind::ItemModel, |name, path| {
+            op(ResourceLocation::item_model(name), path)
+        })
     }
 
     /// Runs the given closure once for each file that exists in
@@ -190,12 +184,14 @@ impl AssetPack {
     ///
     /// The closure is passed the [`ResourceIdentifier`] for each texture as
     /// well as the full path to each image file.
-    pub fn for_each_texture<F, E>(&self, namespace: &str, op: F) -> Result<()>
+    pub fn for_each_texture<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
     where
-        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(namespace, ResourceKind::Texture, op)
+        self.for_each_file(namespace, ResourceKind::Texture, |name, path| {
+            op(ResourceLocation::texture(name), path)
+        })
     }
 
     /// Loads a given resource directly given the full path to its file.
@@ -251,25 +247,14 @@ impl AssetPack {
         loop {
             let model = load_model(&current)?;
 
-            let parent_owned = model
-                .parent
-                .as_ref()
-                .map(|parent| ResourceIdentifier::from(parent.as_str()).to_owned());
+            let parent_owned = model.parent.clone();
 
             op(model);
 
             match parent_owned {
-                Some(parent) if !ModelIdentifier::is_builtin(parent.path()) => {
+                Some(parent) if !ModelIdentifier::is_builtin(&parent) => {
                     //println!("{}", parent.as_str());
-                    current = match current.kind {
-                        ResourceKind::BlockModel => {
-                            ResourceLocation::block_model(parent.as_str()).to_owned()
-                        }
-                        ResourceKind::ItemModel => {
-                            ResourceLocation::item_model(parent.as_str()).to_owned()
-                        }
-                        _ => unreachable!(),
-                    };
+                    current = ResourceLocation::new_owned(current.kind, parent);
                 }
                 _ => break,
             }
@@ -280,7 +265,7 @@ impl AssetPack {
 
     fn for_each_file<F, E>(&self, namespace: &str, kind: ResourceKind, mut op: F) -> Result<()>
     where
-        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        F: FnMut(&str, &Path) -> Result<(), E>,
         Error: From<E>,
     {
         let directory = ResourcePath::for_kind(&self.root, namespace, kind);
@@ -295,7 +280,7 @@ impl AssetPack {
         op: &mut F,
     ) -> Result<()>
     where
-        F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
+        F: FnMut(&str, &Path) -> Result<(), E>,
         Error: From<E>,
     {
         for entry in fs::read_dir(current_directory)? {
@@ -319,7 +304,7 @@ impl AssetPack {
                 let suffix = suffix.with_extension("");
                 let suffix = suffix.to_string_lossy();
 
-                op(&ResourceIdentifier::from(suffix.as_ref()), &entry_path)?;
+                op(suffix.as_ref(), &entry_path)?;
             }
         }
 

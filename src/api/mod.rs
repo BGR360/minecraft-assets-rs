@@ -11,8 +11,8 @@ mod resource;
 pub use asset_pack::AssetPack;
 pub use resolve::ModelResolver;
 pub use resource::{
-    ModelIdentifier, ResourceCategory, ResourceIdentifier, ResourceKind, ResourceLocation,
-    ResourcePath, MINECRAFT_NAMESPACE,
+    ModelIdentifier, ResourceCategory, ResourceKind, ResourceLocation, ResourcePath,
+    MINECRAFT_NAMESPACE,
 };
 
 /// Error types that can be returned from API methods.

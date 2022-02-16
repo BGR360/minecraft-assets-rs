@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::{ResourceKind, ResourceLocation};
+use crate::api::{ResourceKind, ResourceLocation};
 
 /// Represents the full path to a resource, e.g., on the local file system.
 pub struct ResourcePath(PathBuf);
