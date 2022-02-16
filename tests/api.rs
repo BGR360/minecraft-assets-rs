@@ -16,26 +16,17 @@ fn load_block_states(assets: &AssetPack, flattening: Versions) {
     assert_eq!(variants.len(), 1);
 
     let model = &variants[&single_variant_name(flattening)].models()[0];
-    assert_eq!(
-        ModelIdentifier::from(&model.model),
-        ModelIdentifier::from("oak_planks")
-    );
+    assert_eq!(ModelIdentifier::model_name(&model.model), "oak_planks");
 }
 
 fn load_block_model(assets: &AssetPack) {
     // Try it with both a prefixed and non-prefixed path (both should work on
     // all versions).
     let model = assets.load_block_model("cube_all").unwrap();
-    assert_eq!(
-        ModelIdentifier::from(&model.parent.unwrap()),
-        ModelIdentifier::from("cube")
-    );
+    assert_eq!(ModelIdentifier::model_name(&model.parent.unwrap()), "cube");
 
     let model = assets.load_block_model("block/cube_all").unwrap();
-    assert_eq!(
-        ModelIdentifier::from(&model.parent.unwrap()),
-        ModelIdentifier::from("cube")
-    );
+    assert_eq!(ModelIdentifier::model_name(&model.parent.unwrap()), "cube");
 
     // Item model should fail.
     assert_matches!(assets.load_block_model("diamond_hoe"), Err(_));
@@ -52,14 +43,14 @@ fn load_item_model(assets: &AssetPack, version: &str) {
     // all versions).
     let model = assets.load_item_model("diamond_hoe").unwrap();
     assert_eq!(
-        ModelIdentifier::from(&model.parent.unwrap()),
-        ModelIdentifier::from(expected_parent)
+        ModelIdentifier::model_name(&model.parent.unwrap()),
+        expected_parent
     );
 
     let model = assets.load_item_model("item/diamond_hoe").unwrap();
     assert_eq!(
-        ModelIdentifier::from(&model.parent.unwrap()),
-        ModelIdentifier::from(expected_parent)
+        ModelIdentifier::model_name(&model.parent.unwrap()),
+        expected_parent
     );
 
     // Block model should fail.

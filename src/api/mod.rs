@@ -6,11 +6,14 @@ use std::io;
 
 mod asset_pack;
 mod resolve;
-mod resource_location;
+mod resource;
 
 pub use asset_pack::AssetPack;
 pub use resolve::ModelResolver;
-pub use resource_location::{ModelIdentifier, ResourceIdentifier, ResourceLocation};
+pub use resource::{
+    ModelIdentifier, ResourceCategory, ResourceIdentifier, ResourceKind, ResourceLocation,
+    MINECRAFT_NAMESPACE,
+};
 
 /// Error types that can be returned from API methods.
 #[derive(Debug, thiserror::Error)]

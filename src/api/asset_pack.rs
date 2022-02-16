@@ -6,9 +6,7 @@ use std::{
 use serde::de::DeserializeOwned;
 
 use crate::{
-    api::{
-        resource_location::ModelIdentifier, Error, ResourceIdentifier, ResourceLocation, Result,
-    },
+    api::{Error, ModelIdentifier, ResourceIdentifier, ResourceKind, ResourceLocation, Result},
     schemas::{BlockStates, Model},
 };
 
@@ -60,7 +58,7 @@ impl AssetPack {
     /// # use minecraft_assets::api::*;
     /// let assets = AssetPack::at_path("~/.minecraft/");
     ///
-    /// let loc = ResourceLocation::BlockStates("stone".into());
+    /// let loc = ResourceLocation::blockstates("stone");
     /// assert_eq!(
     ///     assets.get_resource_directory(&loc).to_string_lossy(),
     ///     "~/.minecraft/assets/minecraft/blockstates"
@@ -84,7 +82,7 @@ impl AssetPack {
     /// # use minecraft_assets::api::*;
     /// let assets = AssetPack::at_path("~/.minecraft/");
     ///
-    /// let loc = ResourceLocation::BlockStates("stone".into());
+    /// let loc = ResourceLocation::blockstates("stone");
     /// assert_eq!(
     ///     assets.get_resource_path(&loc).to_string_lossy(),
     ///     "~/.minecraft/assets/minecraft/blockstates/stone.json"
@@ -110,7 +108,7 @@ impl AssetPack {
         &self,
         block_id: impl Into<ResourceIdentifier<'a>>,
     ) -> Result<BlockStates> {
-        self.load_resource(&ResourceLocation::BlockStates(block_id.into()))
+        self.load_resource(&ResourceLocation::blockstates(block_id))
     }
 
     /// Loads the block [`Model`] identified by the given name or path.
@@ -123,8 +121,8 @@ impl AssetPack {
     /// let model = assets.load_block_model("stone");
     /// let model = assets.load_block_model("block/dirt");
     /// ```
-    pub fn load_block_model<'a>(&self, model: impl Into<ModelIdentifier<'a>>) -> Result<Model> {
-        self.load_resource(&ResourceLocation::BlockModel(model.into()))
+    pub fn load_block_model<'a>(&self, model: impl Into<ResourceIdentifier<'a>>) -> Result<Model> {
+        self.load_resource(&ResourceLocation::block_model(model))
     }
 
     /// Loads the block [`Model`] identified by the given name or path, as well
@@ -150,9 +148,9 @@ impl AssetPack {
     /// ```
     pub fn load_block_model_recursive<'a>(
         &self,
-        model: impl Into<ModelIdentifier<'a>>,
+        model: impl Into<ResourceIdentifier<'a>>,
     ) -> Result<Vec<Model>> {
-        self.load_model_recursive(&ResourceLocation::BlockModel(model.into()))
+        self.load_model_recursive(&ResourceLocation::block_model(model))
     }
 
     /// Loads the item [`Model`] identified by the given name or path.
@@ -165,8 +163,8 @@ impl AssetPack {
     /// let model = assets.load_item_model("compass");
     /// let model = assets.load_item_model("item/diamond_hoe");
     /// ```
-    pub fn load_item_model<'a>(&self, model: impl Into<ModelIdentifier<'a>>) -> Result<Model> {
-        self.load_resource(&ResourceLocation::ItemModel(model.into()))
+    pub fn load_item_model<'a>(&self, model: impl Into<ResourceIdentifier<'a>>) -> Result<Model> {
+        self.load_resource(&ResourceLocation::item_model(model))
     }
 
     /// Loads the item [`Model`] identified by the given name or path, as well
@@ -192,9 +190,9 @@ impl AssetPack {
     /// ```
     pub fn load_item_model_recursive<'a>(
         &self,
-        model: impl Into<ModelIdentifier<'a>>,
+        model: impl Into<ResourceIdentifier<'a>>,
     ) -> Result<Vec<Model>> {
-        self.load_model_recursive(&ResourceLocation::ItemModel(model.into()))
+        self.load_model_recursive(&ResourceLocation::item_model(model.into()))
     }
 
     /// Runs the given closure once for each file that exists in
@@ -206,7 +204,7 @@ impl AssetPack {
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::BlockStates("foo".into()), op)
+        self.for_each_file(&ResourceLocation::blockstates(""), op)
     }
 
     /// Runs the given closure once for each file that exists in
@@ -218,7 +216,7 @@ impl AssetPack {
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::BlockModel("".into()), op)
+        self.for_each_file(&ResourceLocation::block_model(""), op)
     }
 
     /// Runs the given closure once for each file that exists in
@@ -230,7 +228,7 @@ impl AssetPack {
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::ItemModel("".into()), op)
+        self.for_each_file(&ResourceLocation::item_model(""), op)
     }
 
     /// Runs the given closure once for each file that exists in
@@ -243,7 +241,7 @@ impl AssetPack {
         F: FnMut(&ResourceIdentifier, &Path) -> Result<(), E>,
         Error: From<E>,
     {
-        self.for_each_file(&ResourceLocation::Texture("".into()), op)
+        self.for_each_file(&ResourceLocation::texture(""), op)
     }
 
     /// Loads a given resource directly given the full path to its file.
@@ -302,16 +300,20 @@ impl AssetPack {
             let parent_owned = model
                 .parent
                 .as_ref()
-                .map(|parent| ModelIdentifier::from(ResourceIdentifier::from(parent).to_owned()));
+                .map(|parent| ResourceIdentifier::from(parent.as_str()).to_owned());
 
             op(model);
 
             match parent_owned {
-                Some(parent) if !parent.is_builtin() => {
+                Some(parent) if !ModelIdentifier::is_builtin(parent.path()) => {
                     //println!("{}", parent.as_str());
-                    current = match current {
-                        ResourceLocation::BlockModel(_) => ResourceLocation::BlockModel(parent),
-                        ResourceLocation::ItemModel(_) => ResourceLocation::ItemModel(parent),
+                    current = match current.kind {
+                        ResourceKind::BlockModel => {
+                            ResourceLocation::block_model(parent.as_str()).to_owned()
+                        }
+                        ResourceKind::ItemModel => {
+                            ResourceLocation::item_model(parent.as_str()).to_owned()
+                        }
                         _ => unreachable!(),
                     };
                 }
