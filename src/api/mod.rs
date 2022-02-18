@@ -14,7 +14,7 @@
 //!
 //! ## Asset Pack
 //!
-//! TODO
+//! Resources can be ergonomically loaded through the [`AssetPack`] API.
 
 use std::io;
 

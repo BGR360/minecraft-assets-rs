@@ -1,20 +1,17 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{ops::Deref, path::Path};
 
 use serde::de::DeserializeOwned;
 
 use crate::{
-    api::{Error, ModelIdentifier, ResourceKind, ResourceLocation, ResourcePath, Result},
+    api::{
+        FileSystemResourceProvider, ModelIdentifier, ResourceLocation, ResourceProvider, Result,
+    },
     schemas::{BlockStates, Model},
 };
 
-/// A struct that can read Minecraft assets from a single root directory.
-#[derive(Clone)]
+/// Top-level API for accessing Minecraft assets.
 pub struct AssetPack {
-    /// Path to the directory that **contains** the `assets
-    root: PathBuf,
+    provider: Box<dyn ResourceProvider>,
 }
 
 impl AssetPack {
@@ -40,8 +37,19 @@ impl AssetPack {
     /// assert_eq!(model_properties.model, "block/oak_planks");
     /// ```
     pub fn at_path(root_dir: impl AsRef<Path>) -> Self {
+        let provider = FileSystemResourceProvider::new(root_dir);
         Self {
-            root: PathBuf::from(root_dir.as_ref()),
+            provider: Box::new(provider),
+        }
+    }
+
+    /// Returns a new [`AssetPack`] that uses the given [`ResourceProvider`].
+    pub fn new<P>(provider: P) -> Self
+    where
+        P: ResourceProvider + 'static,
+    {
+        Self {
+            provider: Box::new(provider),
         }
     }
 
@@ -137,93 +145,12 @@ impl AssetPack {
         self.load_model_recursive(&ResourceLocation::item_model(model))
     }
 
-    /// Runs the given closure once for each file that exists in
-    /// `assets/<namespace>/blockstates/`.
-    ///
-    /// The closure is passed the [`ResourceLocation`] for each block as
-    /// well as the full path to each json file.
-    pub fn for_each_blockstates<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
-    where
-        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
-        Error: From<E>,
-    {
-        self.for_each_file(namespace, ResourceKind::BlockStates, |name, path| {
-            op(ResourceLocation::blockstates(name), path)
-        })
-    }
-
-    /// Runs the given closure once for each file that exists in
-    /// `assets/<namespace>/models/block/`.
-    ///
-    /// The closure is passed the [`ResourceLocation`] for each model as
-    /// well as the full path to each json file.
-    pub fn for_each_block_model<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
-    where
-        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
-        Error: From<E>,
-    {
-        self.for_each_file(namespace, ResourceKind::BlockModel, |name, path| {
-            op(ResourceLocation::block_model(name), path)
-        })
-    }
-
-    /// Runs the given closure once for each file that exists in
-    /// `assets/<namespace>/models/item/`.
-    ///
-    /// The closure is passed the [`ResourceLocation`] for each model as
-    /// well as the full path to each json file.
-    pub fn for_each_item_model<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
-    where
-        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
-        Error: From<E>,
-    {
-        self.for_each_file(namespace, ResourceKind::ItemModel, |name, path| {
-            op(ResourceLocation::item_model(name), path)
-        })
-    }
-
-    /// Runs the given closure once for each file that exists in
-    /// `assets/<namespace>/textures/`.
-    ///
-    /// The closure is passed the [`ResourceLocation`] for each texture as
-    /// well as the full path to each image file.
-    pub fn for_each_texture<F, E>(&self, namespace: &str, mut op: F) -> Result<()>
-    where
-        F: FnMut(ResourceLocation, &Path) -> Result<(), E>,
-        Error: From<E>,
-    {
-        self.for_each_file(namespace, ResourceKind::Texture, |name, path| {
-            op(ResourceLocation::texture(name), path)
-        })
-    }
-
-    /// Loads a given resource directly given the full path to its file.
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// # use minecraft_assets::api::*;
-    /// # use minecraft_assets::schemas::BlockStates;
-    /// # let assets = AssetPack::at_path("foo");
-    /// let blockstates: BlockStates = assets.load_resource_at_path(
-    ///     "~/.minecraft/assets/minecraft/blockstates/stone.json"
-    /// ).unwrap();
-    /// ```
-    pub fn load_resource_at_path<T>(&self, path: impl AsRef<Path>) -> Result<T>
-    where
-        T: DeserializeOwned,
-    {
-        let file = fs::File::open(path)?;
-        let resource: T = serde_json::from_reader(file)?;
-        Ok(resource)
-    }
-
     fn load_resource<T>(&self, resource: &ResourceLocation) -> Result<T>
     where
         T: DeserializeOwned,
     {
-        let path = ResourcePath::for_resource(&self.root, resource);
-        self.load_resource_at_path(path)
+        let bytes = self.provider.load_resource(resource)?;
+        Ok(serde_json::from_reader(&bytes[..])?)
     }
 
     fn load_model_recursive(&self, resource: &ResourceLocation) -> Result<Vec<Model>> {
@@ -265,52 +192,12 @@ impl AssetPack {
 
         Ok(())
     }
+}
 
-    fn for_each_file<F, E>(&self, namespace: &str, kind: ResourceKind, mut op: F) -> Result<()>
-    where
-        F: FnMut(&str, &Path) -> Result<(), E>,
-        Error: From<E>,
-    {
-        let directory = ResourcePath::for_kind(&self.root, namespace, kind);
+impl Deref for AssetPack {
+    type Target = dyn ResourceProvider;
 
-        self.for_each_file_inner(&directory, &directory, &mut op)
-    }
-
-    fn for_each_file_inner<F, E>(
-        &self,
-        original_directory: &Path,
-        current_directory: &Path,
-        op: &mut F,
-    ) -> Result<()>
-    where
-        F: FnMut(&str, &Path) -> Result<(), E>,
-        Error: From<E>,
-    {
-        for entry in fs::read_dir(current_directory)? {
-            let entry = entry?;
-
-            let entry_path = entry.path();
-
-            if entry_path
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .starts_with('_')
-            {
-                continue;
-            }
-
-            if entry.file_type()?.is_dir() {
-                self.for_each_file_inner(original_directory, &entry_path, op)?;
-            } else {
-                let suffix = entry_path.strip_prefix(original_directory).unwrap();
-                let suffix = suffix.with_extension("");
-                let suffix = suffix.to_string_lossy();
-
-                op(suffix.as_ref(), &entry_path)?;
-            }
-        }
-
-        Ok(())
+    fn deref(&self) -> &Self::Target {
+        &*self.provider
     }
 }

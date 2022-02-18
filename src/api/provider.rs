@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::api::{Error, ResourceKind, ResourceLocation, ResourcePath};
+use crate::api::{ResourceKind, ResourceLocation, ResourcePath};
 
 /*
  dMMMMMMP dMMMMb  .aMMMb  dMP dMMMMMMP .dMMMb
@@ -15,29 +15,20 @@ dMP   dMP dMP dMP dMP dMP    dMP    VMMMP"
 
 /// Indicates that a type can enumerate available resources.
 pub trait EnumerateResources {
-    #[allow(missing_docs)]
-    type Error;
-
-    #[allow(missing_docs)]
-    type Iter: Iterator<Item = ResourceLocation<'static>>;
-
     /// Enumerates the available resources of the given [`ResourceKind`] in the
     /// given namespace.
     fn enumerate_resources(
         &self,
         namespace: &str,
         kind: ResourceKind,
-    ) -> Result<Self::Iter, Self::Error>;
+    ) -> Result<Vec<ResourceLocation<'static>>, io::Error>;
 }
 
 /// Indicates that a type can load provide the raw data of resources.
 pub trait LoadResource {
-    #[allow(missing_docs)]
-    type Error;
-
     /// Returns the raw bytes of the resource referenced by the given
     /// [`ResourceLocation`].
-    fn load_resource(&self, location: &ResourceLocation) -> Result<Vec<u8>, Self::Error>;
+    fn load_resource(&self, location: &ResourceLocation) -> Result<Vec<u8>, io::Error>;
 }
 
 /// Marker trait for types that are [`EnumerateResources`] and [`LoadResource`].
@@ -78,26 +69,20 @@ impl FileSystemResourceProvider {
 }
 
 impl EnumerateResources for FileSystemResourceProvider {
-    type Error = Error;
-
-    type Iter = ResourceIter;
-
     fn enumerate_resources(
         &self,
         namespace: &str,
         kind: ResourceKind,
-    ) -> Result<Self::Iter, Self::Error> {
+    ) -> Result<Vec<ResourceLocation<'static>>, io::Error> {
         let directory = ResourcePath::for_kind(&self.root, namespace, kind);
-        Ok(ResourceIter::new(directory, kind)?)
+        Ok(ResourceIter::new(directory, kind)?.collect())
     }
 }
 
 impl LoadResource for FileSystemResourceProvider {
-    type Error = Error;
-
-    fn load_resource(&self, location: &ResourceLocation) -> Result<Vec<u8>, Self::Error> {
+    fn load_resource(&self, location: &ResourceLocation) -> Result<Vec<u8>, io::Error> {
         let path = ResourcePath::for_resource(&self.root, location);
-        Ok(fs::read(path)?)
+        fs::read(path)
     }
 }
 
@@ -113,14 +98,75 @@ dMP    dMP   dMMMMMP dMP dMP
 /// An iterator over a directory that yields [`ResourceLocation`]s for every
 /// file of a certain [`ResourceKind`].
 pub struct ResourceIter {
-    dir_iter: fs::ReadDir,
+    // Stack of directory iterators.
+    dir_iters: Vec<fs::ReadDir>,
     kind: ResourceKind,
+}
+
+enum DirOrResource {
+    Dir(fs::ReadDir),
+    Resource(ResourceLocation<'static>),
 }
 
 impl ResourceIter {
     pub fn new(directory: impl AsRef<Path>, kind: ResourceKind) -> Result<Self, io::Error> {
         let dir_iter = fs::read_dir(directory)?;
-        Ok(Self { dir_iter, kind })
+
+        Ok(Self {
+            dir_iters: vec![dir_iter],
+            kind,
+        })
+    }
+
+    #[inline]
+    fn next_dir_or_resource(&mut self) -> Option<DirOrResource> {
+        // Continue iteration in the childmost directory.
+        let dir_iter = self.dir_iters.last_mut().unwrap();
+
+        dir_iter
+            .filter_map(|dir_entry| {
+                dir_entry
+                    // Skip over errorneous entries.
+                    .ok()
+                    // Get file type of entry and skip over fs errors.
+                    .and_then(|dir_entry| {
+                        dir_entry
+                            .file_type()
+                            .ok()
+                            .map(|file_type| (dir_entry, file_type))
+                    })
+                    .and_then(|(dir_entry, file_type)| {
+                        if file_type.is_dir() {
+                            // Start new ReadDir in subdirectory.
+                            fs::read_dir(dir_entry.path())
+                                // Skip over fs errors.
+                                .ok()
+                                .map(DirOrResource::Dir)
+                        } else {
+                            // Get file name and skip over UTF-8 errors.
+                            dir_entry.file_name().to_str().and_then(|file_name| {
+                                (
+                                    // Skip over files starting with '_'.
+                                    !file_name.starts_with('_') &&
+                                    // Skip over resources of the wrong kind (check the extension).
+                                    file_name.ends_with(self.kind.extension())
+                                )
+                                .then(|| {
+                                    // Cut the extension off the file name to
+                                    // get the resource name.
+                                    let dot_index =
+                                        file_name.len() - self.kind.extension().len() - 1;
+                                    let location = ResourceLocation::new_owned(
+                                        self.kind,
+                                        String::from(&file_name[..dot_index]),
+                                    );
+                                    DirOrResource::Resource(location)
+                                })
+                            })
+                        }
+                    })
+            })
+            .next()
     }
 }
 
@@ -128,29 +174,30 @@ impl Iterator for ResourceIter {
     type Item = ResourceLocation<'static>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut next = None;
+        loop {
+            // Get the next directory or resource location.
+            let next_dir_or_resource = self.next_dir_or_resource();
 
-        self.dir_iter.find(|entry| {
-            entry
-                .as_ref()
-                .ok()
-                .and_then(|dir_entry| {
-                    dir_entry.file_name().to_str().map(|file_name| {
-                        let is_right_kind = file_name.ends_with(self.kind.extension());
-                        if is_right_kind {
-                            let dot_index = file_name.len() - self.kind.extension().len() - 1;
-                            let location = ResourceLocation::new_owned(
-                                self.kind,
-                                String::from(&file_name[..dot_index]),
-                            );
-                            next = Some(location);
-                        }
-                        is_right_kind
-                    })
-                })
-                .unwrap_or(false)
-        });
+            // A value of `None` here indicates that the childmost directory has no
+            // more entries, so pop the child or return the final `None`.
+            if next_dir_or_resource.is_none() {
+                if self.dir_iters.len() > 1 {
+                    self.dir_iters.pop();
+                    continue;
+                } else {
+                    return None;
+                }
+            }
 
-        next
+            match next_dir_or_resource.unwrap() {
+                // If the next entry is a directory, push a new child and continue
+                // iterating inside the subdirectory.
+                DirOrResource::Dir(dir_iter) => {
+                    self.dir_iters.push(dir_iter);
+                    continue;
+                }
+                DirOrResource::Resource(location) => return Some(location),
+            }
+        }
     }
 }

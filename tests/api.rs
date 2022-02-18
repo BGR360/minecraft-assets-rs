@@ -3,7 +3,7 @@
 use assert_matches::assert_matches;
 use std::{io, path::PathBuf};
 
-use minecraft_assets::api::{AssetPack, ModelIdentifier};
+use minecraft_assets::api::{AssetPack, ModelIdentifier, ResourceKind};
 
 mod common;
 
@@ -166,56 +166,63 @@ fn api_1_18() {
 fn for_each_blockstates() {
     let assets = get_asset_pack("1.14");
 
-    let mut paths = Vec::new();
-    assets
-        .for_each_blockstates("minecraft", |_, path| -> Result<(), io::Error> {
-            paths.push(PathBuf::from(path));
-            Ok(())
-        })
-        .unwrap();
-
-    assert_eq!(paths.len(), 677);
+    assert_eq!(
+        assets
+            .enumerate_resources("minecraft", ResourceKind::BlockStates)
+            .unwrap()
+            .len(),
+        677
+    );
 }
 
 #[test]
 fn for_each_block_model() {
     let assets = get_asset_pack("1.14");
 
-    let mut paths = Vec::new();
-    assets
-        .for_each_block_model("minecraft", |_, path| -> Result<(), io::Error> {
-            paths.push(PathBuf::from(path));
-            Ok(())
-        })
-        .unwrap();
-
-    assert_eq!(paths.len(), 1201);
+    assert_eq!(
+        assets
+            .enumerate_resources("minecraft", ResourceKind::BlockModel)
+            .unwrap()
+            .len(),
+        1201
+    );
 }
 
 #[test]
 fn for_each_item_model() {
     let assets = get_asset_pack("1.14");
 
-    let mut paths = Vec::new();
-    assets
-        .for_each_item_model("minecraft", |_, path| -> Result<(), io::Error> {
-            paths.push(PathBuf::from(path));
-            Ok(())
-        })
-        .unwrap();
-
-    assert_eq!(paths.len(), 1006);
+    assert_eq!(
+        assets
+            .enumerate_resources("minecraft", ResourceKind::ItemModel)
+            .unwrap()
+            .len(),
+        1006,
+    );
 }
 
 #[test]
-fn for_each_blockstates_with_error() {
+fn for_each_texture() {
     let assets = get_asset_pack("1.14");
 
-    assert_matches!(
-        assets.for_each_item_model("minecraft", |_, _| Err(io::Error::new(
-            io::ErrorKind::Other,
-            ""
-        ))),
-        Err(_)
+    assert_eq!(
+        assets
+            .enumerate_resources("minecraft", ResourceKind::Texture)
+            .unwrap()
+            .len(),
+        1889,
+    );
+}
+
+#[test]
+fn for_each_texture_meta() {
+    let assets = get_asset_pack("1.14");
+
+    assert_eq!(
+        assets
+            .enumerate_resources("minecraft", ResourceKind::TextureMeta)
+            .unwrap()
+            .len(),
+        54,
     );
 }
