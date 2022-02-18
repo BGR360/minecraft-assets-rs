@@ -44,6 +44,11 @@ impl ResourcePath {
 
         Self(path)
     }
+
+    /// Consumes `self` and returns the inner [`PathBuf`].
+    pub fn into_inner(self) -> PathBuf {
+        self.0
+    }
 }
 
 impl AsRef<Path> for ResourcePath {
