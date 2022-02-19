@@ -100,11 +100,13 @@ dMP    dMP   dMMMMMP dMP dMP
 pub struct ResourceIter {
     // Stack of directory iterators.
     dir_iters: Vec<fs::ReadDir>,
+    // Stack of directory names.
+    dir_names: Vec<String>,
     kind: ResourceKind,
 }
 
 enum DirOrResource {
-    Dir(fs::ReadDir),
+    Dir { name: String, iter: fs::ReadDir },
     Resource(ResourceIdentifier<'static>),
 }
 
@@ -114,6 +116,7 @@ impl ResourceIter {
 
         Ok(Self {
             dir_iters: vec![dir_iter],
+            dir_names: vec![],
             kind,
         })
     }
@@ -122,6 +125,7 @@ impl ResourceIter {
     fn next_dir_or_resource(&mut self) -> Option<DirOrResource> {
         // Continue iteration in the childmost directory.
         let dir_iter = self.dir_iters.last_mut().unwrap();
+        let dir_name = self.dir_names.last();
 
         dir_iter
             .filter_map(|dir_entry| {
@@ -141,7 +145,10 @@ impl ResourceIter {
                             fs::read_dir(dir_entry.path())
                                 // Skip over fs errors.
                                 .ok()
-                                .map(DirOrResource::Dir)
+                                .map(|iter| DirOrResource::Dir {
+                                    name: dir_entry.file_name().to_string_lossy().into_owned(),
+                                    iter,
+                                })
                         } else {
                             // Get file name and skip over UTF-8 errors.
                             dir_entry.file_name().to_str().and_then(|file_name| {
@@ -156,10 +163,17 @@ impl ResourceIter {
                                     // get the resource name.
                                     let dot_index =
                                         file_name.len() - self.kind.extension().len() - 1;
-                                    let id = ResourceIdentifier::new_owned(
-                                        self.kind,
-                                        String::from(&file_name[..dot_index]),
-                                    );
+
+                                    let file_name = &file_name[..dot_index];
+
+                                    // Prepend any subdirectory paths
+                                    let mut components = self.dir_names.clone();
+                                    components.push(file_name.to_string());
+
+                                    let resource_path = components.join("/");
+
+                                    let id =
+                                        ResourceIdentifier::new_owned(self.kind, resource_path);
                                     DirOrResource::Resource(id)
                                 })
                             })
@@ -183,6 +197,7 @@ impl Iterator for ResourceIter {
             if next_dir_or_resource.is_none() {
                 if self.dir_iters.len() > 1 {
                     self.dir_iters.pop();
+                    self.dir_names.pop();
                     continue;
                 } else {
                     return None;
@@ -192,8 +207,9 @@ impl Iterator for ResourceIter {
             match next_dir_or_resource.unwrap() {
                 // If the next entry is a directory, push a new child and continue
                 // iterating inside the subdirectory.
-                DirOrResource::Dir(dir_iter) => {
-                    self.dir_iters.push(dir_iter);
+                DirOrResource::Dir { name, iter } => {
+                    self.dir_iters.push(iter);
+                    self.dir_names.push(name);
                     continue;
                 }
                 DirOrResource::Resource(id) => return Some(id),
