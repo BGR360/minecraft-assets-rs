@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::api::{ResourceKind, ResourceLocation};
+use crate::api::{ResourceIdentifier, ResourceKind};
 
 /// Represents the full path to a resource, e.g., on the local file system.
 pub struct ResourcePath(PathBuf);
@@ -17,7 +17,7 @@ impl ResourcePath {
     /// **NOTE:** no validation of the path is performed. The returned path may
     /// not point to an existing file. This method simply computes what the path
     /// should be for a given resource.
-    pub fn for_resource(root: impl AsRef<Path>, resource: &ResourceLocation) -> Self {
+    pub fn for_resource(root: impl AsRef<Path>, resource: &ResourceIdentifier) -> Self {
         let mut path = Self::for_kind(root, resource.namespace(), resource.kind());
 
         path.push(resource.path());

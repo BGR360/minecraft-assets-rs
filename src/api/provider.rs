@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::api::{ResourceKind, ResourceLocation, ResourcePath};
+use crate::api::{ResourceIdentifier, ResourceKind, ResourcePath};
 
 /*
  dMMMMMMP dMMMMb  .aMMMb  dMP dMMMMMMP .dMMMb
@@ -21,14 +21,14 @@ pub trait EnumerateResources {
         &self,
         namespace: &str,
         kind: ResourceKind,
-    ) -> Result<Vec<ResourceLocation<'static>>, io::Error>;
+    ) -> Result<Vec<ResourceIdentifier<'static>>, io::Error>;
 }
 
 /// Indicates that a type can load provide the raw data of resources.
 pub trait LoadResource {
     /// Returns the raw bytes of the resource referenced by the given
-    /// [`ResourceLocation`].
-    fn load_resource(&self, location: &ResourceLocation) -> Result<Vec<u8>, io::Error>;
+    /// [`ResourceIdentifier`].
+    fn load_resource(&self, id: &ResourceIdentifier) -> Result<Vec<u8>, io::Error>;
 }
 
 /// Marker trait for types that are [`EnumerateResources`] and [`LoadResource`].
@@ -73,15 +73,15 @@ impl EnumerateResources for FileSystemResourceProvider {
         &self,
         namespace: &str,
         kind: ResourceKind,
-    ) -> Result<Vec<ResourceLocation<'static>>, io::Error> {
+    ) -> Result<Vec<ResourceIdentifier<'static>>, io::Error> {
         let directory = ResourcePath::for_kind(&self.root, namespace, kind);
         Ok(ResourceIter::new(directory, kind)?.collect())
     }
 }
 
 impl LoadResource for FileSystemResourceProvider {
-    fn load_resource(&self, location: &ResourceLocation) -> Result<Vec<u8>, io::Error> {
-        let path = ResourcePath::for_resource(&self.root, location);
+    fn load_resource(&self, id: &ResourceIdentifier) -> Result<Vec<u8>, io::Error> {
+        let path = ResourcePath::for_resource(&self.root, id);
         fs::read(path)
     }
 }
@@ -95,7 +95,7 @@ dMP    dMP   dMMMMMP dMP dMP
 
 */
 
-/// An iterator over a directory that yields [`ResourceLocation`]s for every
+/// An iterator over a directory that yields [`ResourceIdentifier`]s for every
 /// file of a certain [`ResourceKind`].
 pub struct ResourceIter {
     // Stack of directory iterators.
@@ -105,7 +105,7 @@ pub struct ResourceIter {
 
 enum DirOrResource {
     Dir(fs::ReadDir),
-    Resource(ResourceLocation<'static>),
+    Resource(ResourceIdentifier<'static>),
 }
 
 impl ResourceIter {
@@ -156,11 +156,11 @@ impl ResourceIter {
                                     // get the resource name.
                                     let dot_index =
                                         file_name.len() - self.kind.extension().len() - 1;
-                                    let location = ResourceLocation::new_owned(
+                                    let id = ResourceIdentifier::new_owned(
                                         self.kind,
                                         String::from(&file_name[..dot_index]),
                                     );
-                                    DirOrResource::Resource(location)
+                                    DirOrResource::Resource(id)
                                 })
                             })
                         }
@@ -171,11 +171,11 @@ impl ResourceIter {
 }
 
 impl Iterator for ResourceIter {
-    type Item = ResourceLocation<'static>;
+    type Item = ResourceIdentifier<'static>;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            // Get the next directory or resource location.
+            // Get the next directory or resource id.
             let next_dir_or_resource = self.next_dir_or_resource();
 
             // A value of `None` here indicates that the childmost directory has no
@@ -196,7 +196,7 @@ impl Iterator for ResourceIter {
                     self.dir_iters.push(dir_iter);
                     continue;
                 }
-                DirOrResource::Resource(location) => return Some(location),
+                DirOrResource::Resource(id) => return Some(id),
             }
         }
     }

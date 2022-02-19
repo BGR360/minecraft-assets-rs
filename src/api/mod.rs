@@ -1,9 +1,9 @@
 //! An API for programmatically accessing Minecraft resources and associated
 //! metadata.
 //!
-//! ## Resource Locations
+//! ## Resource Identifiers
 //!
-//! Every resource is associated with a unique [`ResourceLocation`], which is a
+//! Every resource is associated with a unique [`ResourceIdentifier`], which is a
 //! combination of a [`ResourceKind`] and a *namespaced identifier*.
 //!
 //! ## Providers
@@ -29,7 +29,7 @@ pub use provider::{
 };
 pub use resolve::ModelResolver;
 pub use resource::{
-    ModelIdentifier, ResourceCategory, ResourceKind, ResourceLocation, ResourcePath,
+    ModelIdentifier, ResourceCategory, ResourceIdentifier, ResourceKind, ResourcePath,
     MINECRAFT_NAMESPACE,
 };
 

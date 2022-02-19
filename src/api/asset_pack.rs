@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 
 use crate::{
     api::{
-        FileSystemResourceProvider, ModelIdentifier, ResourceLocation, ResourceProvider, Result,
+        FileSystemResourceProvider, ModelIdentifier, ResourceIdentifier, ResourceProvider, Result,
     },
     schemas::{BlockStates, Model},
 };
@@ -64,7 +64,7 @@ impl AssetPack {
     /// let states = assets.load_blockstates("minecraft:dirt");
     /// ```
     pub fn load_blockstates(&self, block_id: &str) -> Result<BlockStates> {
-        self.load_resource(&ResourceLocation::blockstates(block_id))
+        self.load_resource(&ResourceIdentifier::blockstates(block_id))
     }
 
     /// Loads the block [`Model`] identified by the given name or path.
@@ -78,7 +78,7 @@ impl AssetPack {
     /// let model = assets.load_block_model("block/dirt");
     /// ```
     pub fn load_block_model(&self, model: &str) -> Result<Model> {
-        self.load_resource(&ResourceLocation::block_model(model))
+        self.load_resource(&ResourceIdentifier::block_model(model))
     }
 
     /// Loads the block [`Model`] identified by the given name or path, as well
@@ -103,7 +103,7 @@ impl AssetPack {
     /// assert_eq!(models, expected);
     /// ```
     pub fn load_block_model_recursive(&self, model: &str) -> Result<Vec<Model>> {
-        self.load_model_recursive(&ResourceLocation::block_model(model))
+        self.load_model_recursive(&ResourceIdentifier::block_model(model))
     }
 
     /// Loads the item [`Model`] identified by the given name or path.
@@ -117,7 +117,7 @@ impl AssetPack {
     /// let model = assets.load_item_model("item/diamond_hoe");
     /// ```
     pub fn load_item_model(&self, model: &str) -> Result<Model> {
-        self.load_resource(&ResourceLocation::item_model(model))
+        self.load_resource(&ResourceIdentifier::item_model(model))
     }
 
     /// Loads the item [`Model`] identified by the given name or path, as well
@@ -142,10 +142,10 @@ impl AssetPack {
     /// assert_eq!(models, expected);
     /// ```
     pub fn load_item_model_recursive(&self, model: &str) -> Result<Vec<Model>> {
-        self.load_model_recursive(&ResourceLocation::item_model(model))
+        self.load_model_recursive(&ResourceIdentifier::item_model(model))
     }
 
-    fn load_resource<T>(&self, resource: &ResourceLocation) -> Result<T>
+    fn load_resource<T>(&self, resource: &ResourceIdentifier) -> Result<T>
     where
         T: DeserializeOwned,
     {
@@ -153,26 +153,26 @@ impl AssetPack {
         Ok(serde_json::from_reader(&bytes[..])?)
     }
 
-    fn load_model_recursive(&self, resource: &ResourceLocation) -> Result<Vec<Model>> {
+    fn load_model_recursive(&self, resource: &ResourceIdentifier) -> Result<Vec<Model>> {
         let mut models = Vec::new();
 
         Self::for_each_parent(
             resource.clone(),
             |model| models.push(model),
-            |next_location| self.load_resource(next_location),
+            |next_id| self.load_resource(next_id),
         )?;
 
         Ok(models)
     }
 
     pub(crate) fn for_each_parent<F, L, E>(
-        mut current: ResourceLocation,
+        mut current: ResourceIdentifier,
         mut op: F,
         mut load_model: L,
     ) -> Result<(), E>
     where
         F: FnMut(Model),
-        L: FnMut(&ResourceLocation) -> Result<Model, E>,
+        L: FnMut(&ResourceIdentifier) -> Result<Model, E>,
     {
         loop {
             let model = load_model(&current)?;
@@ -184,7 +184,7 @@ impl AssetPack {
             match parent_owned {
                 Some(parent) if !ModelIdentifier::is_builtin(&parent) => {
                     //println!("{}", parent.as_str());
-                    current = ResourceLocation::new_owned(current.kind, parent);
+                    current = ResourceIdentifier::new_owned(current.kind(), parent);
                 }
                 _ => break,
             }
