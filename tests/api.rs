@@ -3,11 +3,48 @@
 use assert_matches::assert_matches;
 use std::{io, path::PathBuf};
 
-use minecraft_assets::api::{AssetPack, ModelIdentifier, ResourceKind};
+use minecraft_assets::api::{
+    AssetPack, EnumerateResources, FileSystemResourceProvider, ModelIdentifier, ResourceKind,
+    ResourceProvider,
+};
 
 mod common;
 
 use common::{single_variant_name, Versions};
+
+fn get_assets_root(version: &str) -> PathBuf {
+    common::get_path_relative_to_manifest_dir(format!("tests/assets-{}", version)).unwrap()
+}
+
+#[test]
+fn test_resource_iter() {
+    let provider = FileSystemResourceProvider::new(get_assets_root("1.14"));
+
+    let textures = provider
+        .enumerate_resources("minecraft", ResourceKind::Texture)
+        .unwrap();
+
+    for needle in [
+        "block/kelp",
+        "item/diamond_hoe",
+        "entity/alex",
+        "entity/llama/decor/blue",
+        "gui/advancements/backgrounds/adventure",
+    ] {
+        assert!(textures.iter().find(|id| id.as_str() == needle).is_some());
+    }
+
+    let texture_metas = provider
+        .enumerate_resources("minecraft", ResourceKind::TextureMeta)
+        .unwrap();
+
+    for needle in ["block/kelp", "block/campfire_fire", "block/lava_flow"] {
+        assert!(texture_metas
+            .iter()
+            .find(|id| id.as_str() == needle)
+            .is_some());
+    }
+}
 
 fn load_block_states(assets: &AssetPack, flattening: Versions) {
     let states = assets.load_blockstates("oak_planks").unwrap();
@@ -107,8 +144,7 @@ fn do_api_test(version: &str, flattening: Versions) {
 }
 
 fn get_asset_pack(version: &str) -> AssetPack {
-    let root =
-        common::get_path_relative_to_manifest_dir(format!("tests/assets-{}", version)).unwrap();
+    let root = get_assets_root(version);
     AssetPack::at_path(root)
 }
 
@@ -149,17 +185,17 @@ fn api_1_15() {
 
 #[test]
 fn api_1_16_2() {
-    do_api_test("1.16.2", Versions::PostFlattening);
+    do_api_test("1.16.2", Versions::Post_1_16_2);
 }
 
 #[test]
 fn api_1_17() {
-    do_api_test("1.17", Versions::PostFlattening);
+    do_api_test("1.17", Versions::Post_1_16_2);
 }
 
 #[test]
 fn api_1_18() {
-    do_api_test("1.18", Versions::PostFlattening);
+    do_api_test("1.18", Versions::Post_1_16_2);
 }
 
 #[test]

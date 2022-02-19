@@ -15,7 +15,7 @@ pub enum ResourceKind {
     /// Resources (`.png`) in `assets/<namespace>/textures/`.
     Texture,
 
-    /// Resources (`.mcmeta`) in `assets/<namespace>/textures/`.
+    /// Resources (`.png.mcmeta`) in `assets/<namespace>/textures/`.
     TextureMeta,
 }
 
@@ -44,13 +44,13 @@ impl ResourceKind {
     /// assert_eq!(kind.extension(), "png");
     ///
     /// let kind = ResourceKind::TextureMeta;
-    /// assert_eq!(kind.extension(), "mcmeta");
+    /// assert_eq!(kind.extension(), "png.mcmeta");
     /// ```
     pub fn extension(&self) -> &'static str {
         match self {
             Self::BlockStates | Self::BlockModel | Self::ItemModel => "json",
             Self::Texture => "png",
-            Self::TextureMeta => "mcmeta",
+            Self::TextureMeta => "png.mcmeta",
         }
     }
 

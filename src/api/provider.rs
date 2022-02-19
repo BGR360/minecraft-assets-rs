@@ -125,7 +125,6 @@ impl ResourceIter {
     fn next_dir_or_resource(&mut self) -> Option<DirOrResource> {
         // Continue iteration in the childmost directory.
         let dir_iter = self.dir_iters.last_mut().unwrap();
-        let dir_name = self.dir_names.last();
 
         dir_iter
             .filter_map(|dir_entry| {
