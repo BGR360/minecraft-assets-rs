@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["blockstates","Serde-(de)serializable data types for `assets/<namespace>/blockstates/*.json`."],["models","Serde-(de)serializable data types for `assets/<namespace>/models/{block,item}/*.json`."]]});

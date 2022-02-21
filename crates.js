@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["itoa","minecraft_assets","proc_macro2","quote","ryu","serde","serde_derive","serde_json","syn","thiserror","thiserror_impl","unicode_xid"];

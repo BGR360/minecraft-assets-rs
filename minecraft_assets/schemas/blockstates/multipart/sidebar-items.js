@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["StateValue","The right-hand side of a [`Condition`] requirement."],["WhenClause","A list of conditions that have to be met for a model to be applied."]],"struct":[["Case","Specifies a case and the model that should apply in that case."],["Condition","A set of conditions that all have to match the block to return true."]]});

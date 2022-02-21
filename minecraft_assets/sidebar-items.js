@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["api","An API for programmatically accessing Minecraft resources and associated metadata."],["schemas","Serde-(de)serializable data types for files in the Minecraft `assets/` directory."],["versions","Information about the different versions of Minecraft assets."]]});
