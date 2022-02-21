@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt};
+use std::{borrow::Cow, fmt, hash::Hash};
 
 #[allow(missing_docs)]
 pub const MINECRAFT_NAMESPACE: &str = "minecraft";
@@ -51,7 +51,7 @@ use crate::api::{ModelIdentifier, ResourceKind};
 ///
 /// [wiki]: <https://minecraft.fandom.com/wiki/Resource_location>
 /// [`ResourceIdentifiers`]: ResourceIdentifier
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone)]
 pub struct ResourceIdentifier<'a> {
     id: Cow<'a, str>,
     kind: ResourceKind,
@@ -205,10 +205,16 @@ impl<'a> ResourceIdentifier<'a> {
     /// [`ItemModel`]: ResourceKind::ItemModel
     pub fn path(&self) -> &str {
         if self.is_model() {
-            ModelIdentifier::model_name(&self.id)
+            ModelIdentifier::model_name(self.raw_path())
         } else {
-            &self.id
+            self.raw_path()
         }
+    }
+
+    fn raw_path(&self) -> &str {
+        self.colon_position()
+            .map(|index| &self.id[index + 1..])
+            .unwrap_or_else(|| &self.id)
     }
 
     /// Returns what kind of resource is referenced by this id.
@@ -269,15 +275,44 @@ impl<'a> ResourceIdentifier<'a> {
     ///     canonical.as_str().as_ptr() as usize,
     /// );
     /// ```
+    ///
+    /// Prepends `block/` or `item/` for models if missing:
+    ///
+    /// ```
+    /// # use minecraft_assets::api::*;
+    /// let id = ResourceIdentifier::item_model("minecraft:diamond_hoe");
+    /// let canonical = id.to_canonical();
+    ///
+    /// assert_eq!(canonical.as_str(), "minecraft:item/diamond_hoe");
+    /// ```
     pub fn to_canonical(&self) -> ResourceIdentifier<'a> {
-        if self.has_namespace() {
+        if self.has_namespace()
+            && (!self.is_model()
+                || self.path().starts_with("item/")
+                || self.path().starts_with("block/"))
+        {
             self.clone()
         } else {
-            let canonical = format!("{}:{}", self.namespace(), self.as_str());
+            let namespace = self.namespace();
+            let path = self.canonical_path();
+
+            let canonical = format!("{}:{}", namespace, path);
             Self {
                 id: Cow::Owned(canonical),
                 kind: self.kind,
             }
+        }
+    }
+
+    fn canonical_path(&self) -> Cow<'_, str> {
+        match self.kind {
+            ResourceKind::BlockModel if !self.path().starts_with("block/") => {
+                Cow::Owned(format!("block/{}", self.path()))
+            }
+            ResourceKind::ItemModel if !self.path().starts_with("item/") => {
+                Cow::Owned(format!("item/{}", self.path()))
+            }
+            _ => Cow::Borrowed(self.path()),
         }
     }
 
@@ -332,6 +367,24 @@ impl<'a> ResourceIdentifier<'a> {
 
     fn colon_position(&self) -> Option<usize> {
         self.id.chars().position(|c| c == ':')
+    }
+}
+
+impl<'a> PartialEq for ResourceIdentifier<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+            && self.namespace() == other.namespace()
+            && self.path() == other.path()
+    }
+}
+
+impl<'a> Eq for ResourceIdentifier<'a> {}
+
+impl<'a> Hash for ResourceIdentifier<'a> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.namespace().hash(state);
+        self.path().hash(state);
+        self.kind.hash(state);
     }
 }
 
